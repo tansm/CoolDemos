@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Text;
 using System.Threading.Tasks;
@@ -70,6 +71,33 @@ internal static class VectorUtils {
 
         for (; j < count; j++) {
             a[j] &= b[j];
+        }
+    }
+
+    public static unsafe void AlignedVectorAnd(Span<long> a, Span<long> b) {
+        nuint count = (uint)a.Length;
+        fixed(long* ptrA = a, ptrB = b){
+            // 检查是否已经对齐到 32 字节边界（AVX2 要求）
+            if ((((nuint)ptrA % (nuint)sizeof(Vector<byte>)) == 0) && (((nuint)ptrB % (nuint)sizeof(Vector<byte>)) == 0)) {
+                nuint j = 0;
+
+                // 处理对齐部分
+                for (; j <= count - (nuint)Vector<long>.Count; j += (nuint)Vector<long>.Count) {
+                    var vecA = Vector.LoadAligned(ptrA + j);
+                    var vecB = Vector.LoadAligned(ptrB + j);
+
+                    var result = vecA & vecB;
+                    result.StoreAligned(ptrA + j);
+                }
+
+                // 处理剩余非对齐元素
+                for (; j < count; j++) {
+                    a[(int)j] &= b[(int)j];
+                }
+            }
+            else {
+                throw new InvalidOperationException("Memory is not aligned to 32 bytes.");
+            }
         }
     }
 

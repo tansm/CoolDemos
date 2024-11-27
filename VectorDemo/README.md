@@ -65,6 +65,15 @@ How should we summarize these contradictory results?
 - Factors such as Windows version, CPU, and .NET runtime can all impact performance. Always benchmark your code thoroughly instead of relying solely on assumptions or prior experiences.
 - Were there any lessons learned from this test? It seems that using `Vector<T>` is a way that doesn't easily lead to major mistakes.
 
+### Supplement
+I added tests to measure how much aligned memory access affects performance. On my i5 CPU (which does not support AVX-512), it improved performance by approximately 25%.
+
+| Method        | Mean     | Error     | StdDev    |
+|-------------- |---------:|----------:|----------:|
+| Vector        | 2.009 us | 0.0377 us | 0.0403 us |
+| AlignedVector | 1.609 us | 0.0308 us | 0.0390 us |
+
+
 (中文)
 ## 向量演示
 
@@ -127,3 +136,12 @@ AMD Ryzen 7 7840HS w/ Radeon 780M Graphics, 1 CPU, 16 logical and 8 physical cor
 
 - Windows、CPU、.net 的版本都不同，影响的因素很多，所以任何代码还是要多做基准测试，不要太相信经验；
 - 这次测试有总结经验吗？ 似乎使用 Vector\<T> 是个不太犯大错的方式；
+
+### 补充
+
+我增加了测试，测量使用对齐方式对性能影响有多大。在我的 i5 CPU机器上（不支持AVX-512)，能提高25%左右。
+
+| Method        | Mean     | Error     | StdDev    |
+|-------------- |---------:|----------:|----------:|
+| Vector        | 2.009 us | 0.0377 us | 0.0403 us |
+| AlignedVector | 1.609 us | 0.0308 us | 0.0390 us |
