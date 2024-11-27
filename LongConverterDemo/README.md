@@ -69,6 +69,31 @@ basic7 : 12278 ms.  result = 2344360008544571914
 
 ```
 
+| Language           | basic1 (ms) | basic2 (ms) | basic3 (ms) | basic4 (ms) | basic5 (ms) | basic6 (ms) | basic7 (ms) |
+|--------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
+| Kotlin Native       | 3721        | 5264        | 6608        | 8030        | 9324        | 11194       | 13346       |
+| Kotlin JVM         | 2446        | 4846        | 4609        | 5830        | 7284        | 8584        | 9943        |
+| C# (.NET 8.0 AOT)  | 1989        | 3205        | 4272        | 5604        | 6955        | 8579        | 9852        |
+| Nim                | 2209        | -           | -           | -           | -           | -           | -           |
+| Rust               | 2779        | 3563        | 4470        | 5332        | 6189        | 7299        | 8158        |
+| V                  | 1336        | 2274        | 3571        | 4748        | 6881        | 9826        | 10438       |
+| Go                 | 3094        | 4594        | 6846        | 8286        | 10577       | 12024       | 12278       |
+
+```mermaid
+%% Example of a bar chart representing basic1 test times across languages
+barChart
+    title Performance Test Results (basic1)
+    x-axis Kotlin Native, Kotlin JVM, C#, Nim, Rust, V, Go
+    y-axis Execution Time (ms)
+    "Kotlin Native" : 3721
+    "Kotlin JVM" : 2446
+    "C# (.NET 8.0 AOT)" : 1989
+    "Nim" : 2209
+    "Rust" : 2779
+    "V" : 1336
+    "Go" : 3094
+```
+
 ## Test Environment 测试环境
 AMD Ryzen 7 7840HS w
 Windows 11 Home RAM:16.0 GB
