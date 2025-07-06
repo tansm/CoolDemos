@@ -1,8 +1,10 @@
 package com.example.orm
 
-abstract class AbstractTuple {
+abstract class AbstractTuple : Iterable<Any?> {
     // 获取指定索引的字段值 (Any? 用于所有类型，包括原始类型的装箱值)
     abstract fun getItem(index: Int): Any?
+
+    abstract fun setItem(index: Int, value: Any?)
 
     // 默认实现是 不包含 rest 字段。
     open fun getRest(): AbstractTuple? = null
@@ -112,6 +114,111 @@ abstract class AbstractTuple {
         return throwIndexOrCaseException(index, "Double")
     }
 
+    // 类型安全的 setter 方法，默认实现递归或抛异常
+    open fun setInt(index: Int, value: Int) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setInt(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Int>(index, "Int")
+    }
+
+    open fun setLong(index: Int, value: Long) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setLong(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Long>(index, "Long")
+    }
+
+    open fun setBoolean(index: Int, value: Boolean) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setBoolean(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Boolean>(index, "Boolean")
+    }
+
+    open fun setByte(index: Int, value: Byte) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setByte(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Byte>(index, "Byte")
+    }
+
+    open fun setShort(index: Int, value: Short) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setShort(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Short>(index, "Short")
+    }
+
+    open fun setChar(index: Int, value: Char) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setChar(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Char>(index, "Char")
+    }
+
+    open fun setFloat(index: Int, value: Float) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setFloat(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Float>(index, "Float")
+    }
+
+    open fun setDouble(index: Int, value: Double) {
+        if (index >= directSize && hasRestField) {
+            val rest = getRest()
+            if (rest != null) {
+                rest.setDouble(index - 7, value)
+                return
+            } else {
+                throwIllegalStateException(index)
+            }
+        }
+        throwIndexOrCaseException<Double>(index, "Double")
+    }
+
     override fun toString(): String {
         val sb = StringBuilder(size * 16)
         var current : AbstractTuple? = this
@@ -165,4 +272,31 @@ abstract class AbstractTuple {
         }
     }
     //endregion
+
+    override fun iterator(): Iterator<Any?> = object : Iterator<Any?> {
+        private var tuple: AbstractTuple? = this@AbstractTuple
+        private var index = 0
+
+        override fun hasNext(): Boolean {
+            while (true) {
+                val t = tuple
+                if (t == null) return false
+                if (index < t.directSize) return true
+                tuple = t.getRest()
+                index = 0
+            }
+        }
+
+        override fun next(): Any? {
+            val t = tuple ?: throw NoSuchElementException()
+            if (index >= t.directSize) {
+                tuple = t.getRest()
+                index = 0
+                return next()
+            }
+            val value = t.getItem(index)
+            index++
+            return value
+        }
+    }
 }

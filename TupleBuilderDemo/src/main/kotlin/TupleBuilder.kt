@@ -50,7 +50,6 @@ class TupleBuilder(
      */
     fun buildTupleSource(directTypes: List<Class<*>>, hasRestField: Boolean): String {
         val className = generateTupleClassName(directTypes, hasRestField).substringAfterLast('.')
-        val fullClassName = generateTupleClassName(directTypes, hasRestField)
 
         val sourceBuilder = StringBuilder()
         sourceBuilder.append("package $basePackage;\n\n")
@@ -140,6 +139,47 @@ class TupleBuilder(
         sourceBuilder.append("        }\n")
         sourceBuilder.append("    }\n\n")
 
+        // setItem(index, value) 方法
+        sourceBuilder.append("    @Override\n")
+        sourceBuilder.append("    public void setItem(int index, Object value) {\n")
+        sourceBuilder.append("        if (index < 0) {\n")
+        sourceBuilder.append("            throwIndexOutOfBounds(index);\n")
+        sourceBuilder.append("            return;\n")
+        sourceBuilder.append("        }\n")
+        sourceBuilder.append("        switch (index) {\n")
+        directTypes.forEachIndexed { i, clazz ->
+            if (clazz.isPrimitive) {
+                // 需要拆箱
+                val cast = when (clazz) {
+                    Integer.TYPE -> "((Integer)value).intValue()"
+                    java.lang.Long.TYPE -> "((Long)value).longValue()"
+                    java.lang.Boolean.TYPE -> "((Boolean)value).booleanValue()"
+                    java.lang.Byte.TYPE -> "((Byte)value).byteValue()"
+                    java.lang.Short.TYPE -> "((Short)value).shortValue()"
+                    Character.TYPE -> "((Character)value).charValue()"
+                    java.lang.Float.TYPE -> "((Float)value).floatValue()"
+                    java.lang.Double.TYPE -> "((Double)value).doubleValue()"
+                    else -> "value"
+                }
+                sourceBuilder.append("            case $i: this.item$i = $cast; return;\n")
+            } else {
+                // 直接赋值
+                sourceBuilder.append("            case $i: this.item$i = value; return;\n")
+            }
+        }
+        if (hasRestField) {
+            sourceBuilder.append("            default:\n")
+            sourceBuilder.append("                if (this.rest == null) {\n")
+            sourceBuilder.append("                    throwIllegalStateException(index);\n")
+            sourceBuilder.append("                }\n")
+            sourceBuilder.append("                this.rest.setItem(index - ${directTypes.size}, value);\n")
+            sourceBuilder.append("                return;\n")
+        } else {
+            sourceBuilder.append("            default: throwIndexOutOfBounds(index);\n")
+        }
+        sourceBuilder.append("        }\n")
+        sourceBuilder.append("    }\n\n")
+
         // 生成所有原始类型 getter 方法
         sourceBuilder.append(generatePrimitiveGetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
         sourceBuilder.append(generatePrimitiveGetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
@@ -150,10 +190,20 @@ class TupleBuilder(
         sourceBuilder.append(generatePrimitiveGetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
         sourceBuilder.append(generatePrimitiveGetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
 
+        // 生成所有原始类型 setter 方法
+        sourceBuilder.append(generatePrimitiveSetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
+        sourceBuilder.append(generatePrimitiveSetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
+        sourceBuilder.append(generatePrimitiveSetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes, hasRestField))
+        sourceBuilder.append(generatePrimitiveSetterSource("Byte", "byte", "java.lang.Byte", directTypes, hasRestField))
+        sourceBuilder.append(generatePrimitiveSetterSource("Short", "short", "java.lang.Short", directTypes, hasRestField))
+        sourceBuilder.append(generatePrimitiveSetterSource("Char", "char", "java.lang.Character", directTypes, hasRestField))
+        sourceBuilder.append(generatePrimitiveSetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
+        sourceBuilder.append(generatePrimitiveSetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
+
         sourceBuilder.append("}\n")
 
         val generatedSource = sourceBuilder.toString()
-        //println("Generated Source for $fullClassName:\n$generatedSource") // 打印生成的源代码
+        //println("Generated Source for $className:\n$generatedSource") // 打印生成的源代码
 
         return generatedSource
     }
@@ -234,6 +284,90 @@ class TupleBuilder(
             methodBuilder.append("                return this.rest.get$methodNameSuffix(index - ${directTypes.size});\n")
         } else {
             methodBuilder.append("            default: return throwIndexOutOfBounds(index);\n") // 调用统一方法
+        }
+        methodBuilder.append("        }\n")
+        methodBuilder.append("    }\n\n")
+        return methodBuilder.toString()
+    }
+
+    /**
+     * 生成原始类型 setter 方法的源代码。
+     *
+     * @param methodNameSuffix 方法名后缀 (例如 "Int", "Long")。
+     * @param primitiveTypeName 原始类型名称 (例如 "int", "long")。
+     * @param wrapperTypeName 包装类型名称 (例如 "java.lang.Integer", "java.lang.Long")。
+     * @param directTypes 当前元组块的直接字段类型列表。
+     * @param hasRestField 当前元组块是否包含 rest 字段。
+     * @return 生成的 setter 方法的源代码字符串。
+     */
+    private fun generatePrimitiveSetterSource(
+        methodNameSuffix: String,
+        primitiveTypeName: String,
+        wrapperTypeName: String,
+        directTypes: List<Class<*>>,
+        hasRestField: Boolean
+    ): String {
+        val correctTypeIndices = mutableListOf<Int>()
+        val wrongTypeIndices = mutableListOf<Int>()
+
+        directTypes.forEachIndexed { i, clazz ->
+            if (clazz.name == primitiveTypeName || clazz.canonicalName == wrapperTypeName) {
+                correctTypeIndices.add(i)
+            } else {
+                wrongTypeIndices.add(i)
+            }
+        }
+
+        // 当所有字段都不符合要输出的类型，就可以简化使用默认实现，从而减少字节码数量
+        if (correctTypeIndices.isEmpty()) {
+            return ""
+        }
+
+        val methodBuilder = StringBuilder()
+        methodBuilder.append("    @Override\n")
+        methodBuilder.append("    public void set$methodNameSuffix(int index, $primitiveTypeName value) {\n")
+        methodBuilder.append("        if (index < 0) {\n")
+        methodBuilder.append("            throwIndexOutOfBounds(index);\n") // 调用统一方法
+        methodBuilder.append("            return;\n")
+        methodBuilder.append("        }\n")
+        methodBuilder.append("        switch (index) {\n")
+
+        // Generate cases for correct types (individual for clarity and correctness if mixed)
+        correctTypeIndices.forEach { i ->
+            methodBuilder.append("            case $i: this.item$i = value; return;\n")
+        }
+
+        // Generate cases for wrong types, grouped if consecutive
+        if (wrongTypeIndices.isNotEmpty()) {
+            val groupedIndices = mutableListOf<MutableList<Int>>()
+            var currentGroup = mutableListOf<Int>()
+
+            wrongTypeIndices.forEach { idx ->
+                if (currentGroup.isEmpty() || currentGroup.last() == idx - 1) {
+                    currentGroup.add(idx)
+                } else {
+                    groupedIndices.add(currentGroup)
+                    currentGroup = mutableListOf(idx)
+                }
+            }
+            if (currentGroup.isNotEmpty()) {
+                groupedIndices.add(currentGroup)
+            }
+
+            groupedIndices.forEach { group ->
+                methodBuilder.append("            case ${group.joinToString(",")}: throwClassCastException(index, \"$methodNameSuffix\");\n")
+            }
+        }
+
+        if (hasRestField) {
+            methodBuilder.append("            default:\n")
+            methodBuilder.append("                if (this.rest == null) {\n")
+            methodBuilder.append("                    throwIllegalStateException(index);\n") // 调用统一方法
+            methodBuilder.append("                }\n")
+            methodBuilder.append("                this.rest.set$methodNameSuffix(index - ${directTypes.size}, value);\n")
+            methodBuilder.append("                return;\n")
+        } else {
+            methodBuilder.append("            default: throwIndexOutOfBounds(index);\n") // 调用统一方法
         }
         methodBuilder.append("        }\n")
         methodBuilder.append("    }\n\n")

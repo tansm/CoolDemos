@@ -32,10 +32,10 @@ class TupleFactoryTest {
         assertEquals(Int::class.java, tupleInstance1.getFieldType(0))
         assertEquals(Any::class.java, tupleInstance1.getFieldType(2)) // Corrected assertion to expect Object.class
 
-        // 通过反射设置字段值 (直接字段)
-        tupleClass1.getDeclaredField("item0").apply { isAccessible = true }.set(tupleInstance1, 10)
-        tupleClass1.getDeclaredField("item1").apply { isAccessible = true }.set(tupleInstance1, 20)
-        tupleClass1.getDeclaredField("item2").apply { isAccessible = true }.set(tupleInstance1, "Hello World")
+        // 使用 setXXX 方法设置字段值
+        tupleInstance1.setInt(0, 10)
+        tupleInstance1.setInt(1, 20)
+        tupleInstance1.setItem(2, "Hello World")
 
         // 验证通过 ITuple 接口获取字段值
         assertEquals(10, tupleInstance1.getItem(0))
@@ -77,8 +77,9 @@ class TupleFactoryTest {
         assertEquals(Long::class.java, tupleInstance2.getFieldType(0))
         assertEquals(Any::class.java, tupleInstance2.getFieldType(1)) // Corrected assertion
 
-        tupleClass2.getDeclaredField("item0").apply { isAccessible = true }.set(tupleInstance2, 123L)
-        tupleClass2.getDeclaredField("item1").apply { isAccessible = true }.set(tupleInstance2, "Any Object Here")
+        // 使用 setXXX 方法设置字段值
+        tupleInstance2.setLong(0, 123L)
+        tupleInstance2.setItem(1, "Any Object Here")
 
         assertEquals(123L, tupleInstance2.getLong(0))
         assertEquals("Any Object Here", tupleInstance2.getItem(1))
@@ -114,7 +115,8 @@ class TupleFactoryTest {
         assertEquals(1, singleInstance.size)
         assertEquals(Int::class.java, singleInstance.getFieldType(0))
 
-        singleIntTupleClass.getDeclaredField("item0").apply { isAccessible = true }.set(singleInstance, 123)
+        // 使用 setXXX 方法设置字段值
+        singleInstance.setInt(0, 123)
 
         assertEquals(123, singleInstance.getItem(0))
         assertEquals(123, singleInstance.getInt(0))
@@ -138,9 +140,9 @@ class TupleFactoryTest {
         assertEquals(8, instance.size) // 总大小是8
         assertEquals(7, instance.directSize)
 
-        // 设置前7个直接字段
+        // 使用 setXXX 方法设置前7个直接字段
         for (i in 0 until 7) {
-            rootTupleClass.getDeclaredField("item$i").apply { isAccessible = true }.set(instance, i + 1)
+            instance.setInt(i, i + 1)
         }
 
         // 获取并设置 rest 字段
@@ -150,7 +152,8 @@ class TupleFactoryTest {
         assertTrue(AbstractTuple::class.java.isAssignableFrom(nestedTupleClass))
         assertEquals("com.mycompany.generated.tuples.Tuple_O", nestedTupleClass.name) // 嵌套元组的类名
 
-        nestedTupleClass.getDeclaredField("item0").apply { isAccessible = true }.set(nestedInstance, "Nested String Value")
+        // setItem 设置 String 字段
+        nestedInstance.setItem(0, "Nested String Value")
 
         // 验证通过根元组的 ITuple 接口访问所有字段
         assertEquals(1, instance.getInt(0))
@@ -162,7 +165,6 @@ class TupleFactoryTest {
         // 验证 toString() 包含嵌套信息
         assertEquals("Tuple_IIIIIIIR(item0=1, item1=2, item2=3, item3=4, item4=5, item5=6, item6=7, rest=Tuple_O(item0=Nested String Value))", instance.toString())
     }
-
 
     @Test
     fun testTupleWithMoreThanEightElements_MultipleChaining() {
@@ -182,9 +184,9 @@ class TupleFactoryTest {
         assertEquals(10, instance.size)
         assertEquals(7, instance.directSize)
 
-        // 设置前7个字段
+        // 使用 setXXX 方法设置前7个字段
         for (i in 0 until 7) {
-            rootTupleClass.getDeclaredField("item$i").apply { isAccessible = true }.set(instance, i + 10)
+            instance.setInt(i, i + 10)
         }
 
         // 获取并设置 rest 字段 (嵌套元组1)
@@ -194,9 +196,10 @@ class TupleFactoryTest {
         assertTrue(AbstractTuple::class.java.isAssignableFrom(nestedTupleClass1))
         assertEquals("com.mycompany.generated.tuples.Tuple_OBL", nestedTupleClass1.name) // String, Boolean, Long
 
-        nestedTupleClass1.getDeclaredField("item0").apply { isAccessible = true }.set(nestedInstance1, "String Val")
-        nestedTupleClass1.getDeclaredField("item1").apply { isAccessible = true }.set(nestedInstance1, true)
-        nestedTupleClass1.getDeclaredField("item2").apply { isAccessible = true }.set(nestedInstance1, 999L) // 直接设置Long
+        // setItem 设置 String 字段
+        nestedInstance1.setItem(0, "String Val")
+        nestedInstance1.setBoolean(1, true)
+        nestedInstance1.setLong(2, 999L) // 直接设置Long
 
         // 验证所有字段的值和类型
         assertEquals(10, instance.getInt(0))
@@ -241,5 +244,69 @@ class TupleFactoryTest {
         // 尝试获取错误类型
         assertFailsWith<ClassCastException> { instance.getLong(0) } // Int is not Long
         assertFailsWith<ClassCastException> { instance.getInt(1) } // String is not Int, getInt now handles this via bytecode
+    }
+
+    @Test
+    fun testIterator_EmptyTuple() {
+        val tupleType = emptyList<Class<*>>()
+        val tuple = tupleFactory.getOrCreateTuple(tupleType)
+        val iterated = tuple.toList()
+        assertTrue(iterated.isEmpty())
+    }
+
+    @Test
+    fun testIterator_LessThan8Fields() {
+        val tupleType = listOf(Int::class.java, String::class.java, Boolean::class.java)
+        val tuple = tupleFactory.getOrCreateTuple(tupleType)
+        tuple.setInt(0, 42)
+        tuple.setItem(1, "abc")
+        tuple.setBoolean(2, true)
+        val iterated = tuple.toList()
+        assertEquals(listOf(42, "abc", true), iterated)
+    }
+
+    @Test
+    fun testIterator_MoreThan8Fields() {
+        val tupleType = List(18) { i ->
+            when (i % 3) {
+                0 -> Int::class.java
+                1 -> String::class.java
+                else -> Boolean::class.java
+            }
+        }
+        val tuple = tupleFactory.getOrCreateTuple(tupleType)
+        for (i in 0 until 18) {
+            when (i % 3) {
+                0 -> tuple.setInt(i, i)
+                1 -> tuple.setItem(i, "str$i")
+                else -> tuple.setBoolean(i, i % 2 == 0)
+            }
+        }
+        val expected = List(18) { i ->
+            when (i % 3) {
+                0 -> i
+                1 -> "str$i"
+                else -> i % 2 == 0
+            }
+        }
+        val iterated = tuple.toList()
+        assertEquals(expected, iterated)
+    }
+
+    @Test
+    fun testGeneratedClassFields() {
+        val tupleType = listOf(Int::class.java, String::class.java, Boolean::class.java, Long::class.java)
+        val tuple = tupleFactory.getOrCreateTuple(tupleType)
+        val clazz = tuple.javaClass
+        // 检查字段名和类型
+        val fields = clazz.declaredFields.associateBy { it.name }
+        assertTrue(fields.containsKey("item0"))
+        assertTrue(fields.containsKey("item1"))
+        assertTrue(fields.containsKey("item2"))
+        assertTrue(fields.containsKey("item3"))
+        assertEquals(Int::class.javaPrimitiveType, fields["item0"]?.type)
+        assertEquals(Any::class.java, fields["item1"]?.type) // String 字段生成 Object
+        assertEquals(Boolean::class.javaPrimitiveType, fields["item2"]?.type)
+        assertEquals(Long::class.javaPrimitiveType, fields["item3"]?.type)
     }
 }
