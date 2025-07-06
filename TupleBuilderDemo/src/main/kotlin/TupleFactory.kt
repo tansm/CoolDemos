@@ -1,6 +1,5 @@
 package com.example.orm
 
-import com.example.orm.TupleUtils.MAX_DIRECT_FIELDS
 import java.io.StringWriter
 import java.net.URI
 import javax.tools.DiagnosticCollector
@@ -154,18 +153,18 @@ class TupleFactory(private val tupleBuilder: TupleBuilder) {
      * 此方法负责迭代构建和链接元组分段，并利用 getOrCreateTupleClass 方法的缓存。
      *
      * @param allTypes 元组中字段的 Java Class 类型列表 (完整的类型列表)。
-     * @return 动态生成的元组链的根 ITuple 实例。
+     * @return 动态生成的元组链的根 AbstractTuple 实例。
      */
-    fun getOrCreateTuple(allTypes: List<Class<*>>): ITuple {
+    fun getOrCreateTuple(allTypes: List<Class<*>>): AbstractTuple {
         if (allTypes.isEmpty()) {
             // 对于空元组，直接创建并返回一个空的 ITuple 实例
             val emptyTupleClass = getOrCreateTupleClass(emptyList(), false)
-            return emptyTupleClass.newInstance() as ITuple
+            return emptyTupleClass.newInstance() as AbstractTuple
         }
 
         var currentStartIndex = 0
-        var rootTupleInstance: ITuple? = null
-        var previousTupleInstance: ITuple? = null
+        var rootTupleInstance: AbstractTuple? = null
+        var previousTupleInstance: AbstractTuple? = null
 
         // 迭代构建元组链
         while (currentStartIndex < allTypes.size) {
@@ -177,7 +176,7 @@ class TupleFactory(private val tupleBuilder: TupleBuilder) {
             val segmentClass = getOrCreateTupleClass(directTypesForThisSegment, hasRestFieldForThisSegment)
 
             // 实例化当前分段的元组
-            val currentTupleInstance = segmentClass.newInstance() as ITuple
+            val currentTupleInstance = segmentClass.newInstance() as AbstractTuple
 
             // 链接元组链
             if (rootTupleInstance == null) {
@@ -192,5 +191,11 @@ class TupleFactory(private val tupleBuilder: TupleBuilder) {
             currentStartIndex = currentChunkEndIndex // 移动到下一个分段的起始索引
         }
         return rootTupleInstance!!
+    }
+
+    private companion object{
+
+        // 定义 ValueTuple 的最大直接字段数
+        const val MAX_DIRECT_FIELDS = 7
     }
 }

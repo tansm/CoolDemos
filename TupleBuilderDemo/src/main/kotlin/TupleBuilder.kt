@@ -36,7 +36,7 @@ class TupleBuilder(
      */
     fun generateTupleClassName(directTypes: List<Class<*>>, hasRestField: Boolean): String {
         val typeAbbr = directTypes.joinToString("") { getTypeAbbreviation(it) }
-        val restSuffix = if (hasRestField) getTypeAbbreviation(ITuple::class.java) else "" // 'O' for ITuple
+        val restSuffix = if (hasRestField) "R" else "" // 'R' for ITuple
         // 格式：Tuple_TypeAbbr[RestSuffix]
         return "$basePackage.Tuple_${typeAbbr}$restSuffix"
     }
@@ -54,45 +54,51 @@ class TupleBuilder(
 
         val sourceBuilder = StringBuilder()
         sourceBuilder.append("package $basePackage;\n\n")
-        val itfName = ITuple::class.java.name // 获取 ITuple 的全限定名
-        sourceBuilder.append("import $itfName;\n") // 使用全限定名导入
+        val tfName = AbstractTuple::class.java.name // 获取 AbstractTuple 的全限定名
+        sourceBuilder.append("import $tfName;\n") // 使用全限定名导入
         sourceBuilder.append("import java.lang.Class;\n")
-        // 导入统一的异常帮助类
-        sourceBuilder.append("import ${TupleUtils::class.java.name};\n\n")
 
-        sourceBuilder.append("public final class $className implements ${ITuple::class.java.simpleName} {\n")
+        sourceBuilder.append("public final class $className extends ${AbstractTuple::class.java.simpleName} {\n")
 
         // 定义字段
         directTypes.forEachIndexed { index, clazz ->
             // 字段类型声明也应该与 getFieldType 的返回类型一致：非原始类型声明为 Object
-            val fieldType = if (clazz.isPrimitive) clazz.canonicalName else "java.lang.Object"
+            val fieldType = if (clazz.isPrimitive) clazz.canonicalName else "Object"
             sourceBuilder.append("    public $fieldType item$index;\n")
         }
         if (hasRestField) {
-            sourceBuilder.append("    public ${ITuple::class.java.canonicalName} rest;\n")
+            sourceBuilder.append("    public ${AbstractTuple::class.java.canonicalName} rest;\n")
         }
         sourceBuilder.append("\n")
 
         // 默认构造函数
         sourceBuilder.append("    public $className() {}\n\n")
 
-        // getSize() 方法
+        // getDirectSize() 方法
         sourceBuilder.append("    @Override\n")
-        sourceBuilder.append("    public int getSize() {\n")
-        sourceBuilder.append("        int size = ${directTypes.size};\n")
-        if (hasRestField) {
-            sourceBuilder.append("        if (this.rest != null) {\n")
-            sourceBuilder.append("            size += this.rest.getSize();\n")
-            sourceBuilder.append("        }\n")
-        }
-        sourceBuilder.append("        return size;\n")
+        sourceBuilder.append("    public int getDirectSize() {\n")
+        sourceBuilder.append("        return ${directTypes.size};\n")
         sourceBuilder.append("    }\n\n")
+
+        if(hasRestField) {
+            // getRest()
+            sourceBuilder.append("@Override\n")
+            sourceBuilder.append("public AbstractTuple getRest() {")
+            sourceBuilder.append("    return rest;")
+            sourceBuilder.append("}")
+
+            // hasRestField()
+            sourceBuilder.append("@Override\n")
+            sourceBuilder.append("public boolean getHasRestField() {")
+            sourceBuilder.append("    return true;")
+            sourceBuilder.append("}")
+        }
 
         // getFieldType(index) 方法
         sourceBuilder.append("    @Override\n")
         sourceBuilder.append("    public Class<?> getFieldType(int index) {\n")
         sourceBuilder.append("        if (index < 0) {\n")
-        sourceBuilder.append("            return ${TupleUtils::class.java.simpleName}.throwIndexOutOfBounds(index);\n") // 调用统一方法
+        sourceBuilder.append("            return throwIndexOutOfBounds(index);\n") // 调用统一方法
         sourceBuilder.append("        }\n")
         sourceBuilder.append("        switch (index) {\n")
         directTypes.forEachIndexed { i, clazz ->
@@ -103,11 +109,11 @@ class TupleBuilder(
         if (hasRestField) {
             sourceBuilder.append("            default:\n")
             sourceBuilder.append("                if (this.rest == null) {\n")
-            sourceBuilder.append("                    ${TupleUtils::class.java.simpleName}.throwIllegalStateException(index);\n") // 调用统一方法
+            sourceBuilder.append("                    throwIllegalStateException(index);\n") // 调用统一方法
             sourceBuilder.append("                }\n")
             sourceBuilder.append("                return this.rest.getFieldType(index - ${directTypes.size});\n")
         } else {
-            sourceBuilder.append("            default: return ${TupleUtils::class.java.simpleName}.throwIndexOutOfBounds(index);\n") // 调用统一方法
+            sourceBuilder.append("            default: return throwIndexOutOfBounds(index);\n") // 调用统一方法
         }
         sourceBuilder.append("        }\n")
         sourceBuilder.append("    }\n\n")
@@ -116,7 +122,7 @@ class TupleBuilder(
         sourceBuilder.append("    @Override\n")
         sourceBuilder.append("    public Object getItem(int index) {\n")
         sourceBuilder.append("        if (index < 0) {\n")
-        sourceBuilder.append("            return ${TupleUtils::class.java.simpleName}.throwIndexOutOfBounds(index);\n") // 调用统一方法
+        sourceBuilder.append("            return throwIndexOutOfBounds(index);\n") // 调用统一方法
         sourceBuilder.append("        }\n")
         sourceBuilder.append("        switch (index) {\n")
         directTypes.forEachIndexed { i, _ ->
@@ -125,11 +131,11 @@ class TupleBuilder(
         if (hasRestField) {
             sourceBuilder.append("            default:\n")
             sourceBuilder.append("                if (this.rest == null) {\n")
-            sourceBuilder.append("                    return ${TupleUtils::class.java.simpleName}.throwIndexOutOfBounds(index);\n") // 调用统一方法
+            sourceBuilder.append("                    return throwIndexOutOfBounds(index);\n") // 调用统一方法
             sourceBuilder.append("                }\n")
             sourceBuilder.append("                return this.rest.getItem(index - ${directTypes.size});\n")
         } else {
-            sourceBuilder.append("            default: return ${TupleUtils::class.java.simpleName}.throwIndexOutOfBounds(index);\n") // 调用统一方法
+            sourceBuilder.append("            default: return throwIndexOutOfBounds(index);\n") // 调用统一方法
         }
         sourceBuilder.append("        }\n")
         sourceBuilder.append("    }\n\n")
@@ -144,30 +150,10 @@ class TupleBuilder(
         sourceBuilder.append(generatePrimitiveGetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
         sourceBuilder.append(generatePrimitiveGetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
 
-        // toString() 方法
-        sourceBuilder.append("    @Override\n")
-        sourceBuilder.append("    public String toString() {\n")
-        sourceBuilder.append("        StringBuilder sb = new StringBuilder(\"$className(\");\n")
-        directTypes.forEachIndexed { index, _ ->
-            sourceBuilder.append("        sb.append(\"item$index=\").append(this.item$index);\n")
-            if (index < directTypes.size - 1) {
-                sourceBuilder.append("        sb.append(\", \");\n")
-            }
-        }
-        if (hasRestField) {
-            if (directTypes.isNotEmpty()) {
-                sourceBuilder.append("        sb.append(\", \");\n")
-            }
-            sourceBuilder.append("        sb.append(\"rest=\").append(this.rest);\n")
-        }
-        sourceBuilder.append("        sb.append(\")\");\n")
-        sourceBuilder.append("        return sb.toString();\n")
-        sourceBuilder.append("    }\n")
-
         sourceBuilder.append("}\n")
 
         val generatedSource = sourceBuilder.toString()
-        println("Generated Source for $fullClassName:\n$generatedSource") // 打印生成的源代码
+        //println("Generated Source for $fullClassName:\n$generatedSource") // 打印生成的源代码
 
         return generatedSource
     }
@@ -189,14 +175,6 @@ class TupleBuilder(
         directTypes: List<Class<*>>,
         hasRestField: Boolean
     ): String {
-        val methodBuilder = StringBuilder()
-        methodBuilder.append("    @Override\n")
-        methodBuilder.append("    public $primitiveTypeName get$methodNameSuffix(int index) {\n")
-        methodBuilder.append("        if (index < 0) {\n")
-        methodBuilder.append("            return ${TupleUtils::class.java.simpleName}.throwIndexOutOfBounds(index);\n") // 调用统一方法
-        methodBuilder.append("        }\n")
-        methodBuilder.append("        switch (index) {\n")
-
         val correctTypeIndices = mutableListOf<Int>()
         val wrongTypeIndices = mutableListOf<Int>()
 
@@ -207,6 +185,19 @@ class TupleBuilder(
                 wrongTypeIndices.add(i)
             }
         }
+
+        // 当所有字段都不符合要输出的类型，就可以简化使用默认实现，从而减少字节码数量
+        if (correctTypeIndices.isEmpty()) {
+            return ""
+        }
+
+        val methodBuilder = StringBuilder()
+        methodBuilder.append("    @Override\n")
+        methodBuilder.append("    public $primitiveTypeName get$methodNameSuffix(int index) {\n")
+        methodBuilder.append("        if (index < 0) {\n")
+        methodBuilder.append("            return throwIndexOutOfBounds(index);\n") // 调用统一方法
+        methodBuilder.append("        }\n")
+        methodBuilder.append("        switch (index) {\n")
 
         // Generate cases for correct types (individual for clarity and correctness if mixed)
         correctTypeIndices.forEach { i ->
@@ -231,18 +222,18 @@ class TupleBuilder(
             }
 
             groupedIndices.forEach { group ->
-                methodBuilder.append("            case ${group.joinToString(",")}: ${TupleUtils::class.java.simpleName}.throwClassCastException(index, \"$methodNameSuffix\");\n")
+                methodBuilder.append("            case ${group.joinToString(",")}: throwClassCastException(index, \"$methodNameSuffix\");\n")
             }
         }
 
         if (hasRestField) {
             methodBuilder.append("            default:\n")
             methodBuilder.append("                if (this.rest == null) {\n")
-            methodBuilder.append("                    ${TupleUtils::class.java.simpleName}.throwIllegalStateException(index);\n") // 调用统一方法
+            methodBuilder.append("                    throwIllegalStateException(index);\n") // 调用统一方法
             methodBuilder.append("                }\n")
             methodBuilder.append("                return this.rest.get$methodNameSuffix(index - ${directTypes.size});\n")
         } else {
-            methodBuilder.append("            default: return ${TupleUtils::class.java.simpleName}.throwIndexOutOfBounds(index);\n") // 调用统一方法
+            methodBuilder.append("            default: return throwIndexOutOfBounds(index);\n") // 调用统一方法
         }
         methodBuilder.append("        }\n")
         methodBuilder.append("    }\n\n")

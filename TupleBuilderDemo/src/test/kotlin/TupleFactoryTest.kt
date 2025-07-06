@@ -23,11 +23,11 @@ class TupleFactoryTest {
 
         // 验证类名符合预期: Tuple_IIO (没有rest字段)
         assertEquals("com.mycompany.generated.tuples.Tuple_IIO", tupleClass1.name)
-        // 验证实现了 ITuple 接口
-        assertTrue(ITuple::class.java.isAssignableFrom(tupleClass1))
+        // 验证继承了 AbstractTuple
+        assertTrue(AbstractTuple::class.java.isAssignableFrom(tupleClass1))
 
         // 验证字段数量和类型 (getSize() 应该返回原始总数)
-        assertEquals(3, tupleInstance1.getSize())
+        assertEquals(3, tupleInstance1.size)
         // 关键验证：getFieldType 对于 String 应该返回 Object.class
         assertEquals(Int::class.java, tupleInstance1.getFieldType(0))
         assertEquals(Any::class.java, tupleInstance1.getFieldType(2)) // Corrected assertion to expect Object.class
@@ -73,7 +73,7 @@ class TupleFactoryTest {
         assertFalse(tupleClass1 === tupleClass2)
         assertEquals("com.mycompany.generated.tuples.Tuple_LO", tupleClass2.name)
 
-        assertEquals(2, tupleInstance2.getSize())
+        assertEquals(2, tupleInstance2.size)
         assertEquals(Long::class.java, tupleInstance2.getFieldType(0))
         assertEquals(Any::class.java, tupleInstance2.getFieldType(1)) // Corrected assertion
 
@@ -91,9 +91,9 @@ class TupleFactoryTest {
         val emptyTupleClass = emptyInstance.javaClass
 
         assertEquals("com.mycompany.generated.tuples.Tuple_", emptyTupleClass.name)
-        assertTrue(ITuple::class.java.isAssignableFrom(emptyTupleClass))
+        assertTrue(AbstractTuple::class.java.isAssignableFrom(emptyTupleClass))
 
-        assertEquals(0, emptyInstance.getSize())
+        assertEquals(0, emptyInstance.size)
         assertEquals("Tuple_()", emptyInstance.toString())
 
         // 验证越界访问
@@ -109,9 +109,9 @@ class TupleFactoryTest {
         val singleIntTupleClass = singleInstance.javaClass
 
         assertEquals("com.mycompany.generated.tuples.Tuple_I", singleIntTupleClass.name)
-        assertTrue(ITuple::class.java.isAssignableFrom(singleIntTupleClass))
+        assertTrue(AbstractTuple::class.java.isAssignableFrom(singleIntTupleClass))
 
-        assertEquals(1, singleInstance.getSize())
+        assertEquals(1, singleInstance.size)
         assertEquals(Int::class.java, singleInstance.getFieldType(0))
 
         singleIntTupleClass.getDeclaredField("item0").apply { isAccessible = true }.set(singleInstance, 123)
@@ -132,10 +132,11 @@ class TupleFactoryTest {
         val rootTupleClass = instance.javaClass
 
         // 根元组类名应该反映其直接字段和 rest 字段的类型缩写
-        assertEquals("com.mycompany.generated.tuples.Tuple_IIIIIIIO", rootTupleClass.name) // 7个I + 1个O (代表嵌套的ITuple)
-        assertTrue(ITuple::class.java.isAssignableFrom(rootTupleClass))
+        assertEquals("com.mycompany.generated.tuples.Tuple_IIIIIIIR", rootTupleClass.name) // 7个I + 1个O (代表嵌套的ITuple)
+        assertTrue(AbstractTuple::class.java.isAssignableFrom(rootTupleClass))
 
-        assertEquals(8, instance.getSize()) // 总大小是8
+        assertEquals(8, instance.size) // 总大小是8
+        assertEquals(7, instance.directSize)
 
         // 设置前7个直接字段
         for (i in 0 until 7) {
@@ -144,9 +145,9 @@ class TupleFactoryTest {
 
         // 获取并设置 rest 字段
         val restField = rootTupleClass.getDeclaredField("rest").apply { isAccessible = true } // 使用 "rest" 字段名
-        val nestedInstance = restField.get(instance) as ITuple // 获取工厂创建并链接的嵌套实例
+        val nestedInstance = restField.get(instance) as AbstractTuple // 获取工厂创建并链接的嵌套实例
         val nestedTupleClass = nestedInstance.javaClass
-        assertTrue(ITuple::class.java.isAssignableFrom(nestedTupleClass))
+        assertTrue(AbstractTuple::class.java.isAssignableFrom(nestedTupleClass))
         assertEquals("com.mycompany.generated.tuples.Tuple_O", nestedTupleClass.name) // 嵌套元组的类名
 
         nestedTupleClass.getDeclaredField("item0").apply { isAccessible = true }.set(nestedInstance, "Nested String Value")
@@ -159,7 +160,7 @@ class TupleFactoryTest {
         assertEquals(Any::class.java, instance.getFieldType(7)) // Corrected assertion to expect Object.class
 
         // 验证 toString() 包含嵌套信息
-        assertEquals("Tuple_IIIIIIIO(item0=1, item1=2, item2=3, item3=4, item4=5, item5=6, item6=7, rest=Tuple_O(item0=Nested String Value))", instance.toString())
+        assertEquals("Tuple_IIIIIIIR(item0=1, item1=2, item2=3, item3=4, item4=5, item5=6, item6=7, rest=Tuple_O(item0=Nested String Value))", instance.toString())
     }
 
 
@@ -175,10 +176,11 @@ class TupleFactoryTest {
         val rootTupleClass = instance.javaClass
 
         // 根元组类名
-        assertEquals("com.mycompany.generated.tuples.Tuple_IIIIIIIO", rootTupleClass.name)
-        assertTrue(ITuple::class.java.isAssignableFrom(rootTupleClass))
+        assertEquals("com.mycompany.generated.tuples.Tuple_IIIIIIIR", rootTupleClass.name)
+        assertTrue(AbstractTuple::class.java.isAssignableFrom(rootTupleClass))
 
-        assertEquals(10, instance.getSize())
+        assertEquals(10, instance.size)
+        assertEquals(7, instance.directSize)
 
         // 设置前7个字段
         for (i in 0 until 7) {
@@ -187,9 +189,9 @@ class TupleFactoryTest {
 
         // 获取并设置 rest 字段 (嵌套元组1)
         val restField1 = rootTupleClass.getDeclaredField("rest").apply { isAccessible = true } // 使用 "rest"字段名
-        val nestedInstance1 = restField1.get(instance) as ITuple
+        val nestedInstance1 = restField1.get(instance) as AbstractTuple
         val nestedTupleClass1 = nestedInstance1.javaClass
-        assertTrue(ITuple::class.java.isAssignableFrom(nestedTupleClass1))
+        assertTrue(AbstractTuple::class.java.isAssignableFrom(nestedTupleClass1))
         assertEquals("com.mycompany.generated.tuples.Tuple_OBL", nestedTupleClass1.name) // String, Boolean, Long
 
         nestedTupleClass1.getDeclaredField("item0").apply { isAccessible = true }.set(nestedInstance1, "String Val")
@@ -209,7 +211,7 @@ class TupleFactoryTest {
         assertEquals(Long::class.java, instance.getFieldType(9)) // Long is primitive, should remain Long.class
 
         // 验证 toString()
-        val expectedToString = "Tuple_IIIIIIIO(item0=10, item1=11, item2=12, item3=13, item4=14, item5=15, item6=16, rest=Tuple_OBL(item0=String Val, item1=true, item2=999))"
+        val expectedToString = "Tuple_IIIIIIIR(item0=10, item1=11, item2=12, item3=13, item4=14, item5=15, item6=16, rest=Tuple_OBL(item0=String Val, item1=true, item2=999))"
         assertEquals(expectedToString, instance.toString())
     }
 
