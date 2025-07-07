@@ -1,26 +1,32 @@
-//package com.mycompany.generated.tuples;
 
 import com.example.orm.AbstractTuple;
-import org.jetbrains.annotations.Nullable;
-
 import java.lang.Class;
 
-final class Tuple_OBL extends AbstractTuple {
-    public Object item0;
-    public boolean item1;
-    public long item2;
+final class Tuple_IOBIOBIR extends AbstractTuple {
+    public int item0;
+    public Object item1;
+    public boolean item2;
+    public int item3;
+    public Object item4;
+    public boolean item5;
+    public int item6;
+    public com.example.orm.AbstractTuple rest;
 
-    public Tuple_OBL() {}
+    public Tuple_IOBIOBIR() {}
 
     @Override
     public int getDirectSize() {
-        int size = 3;
-        return size;
+        return 7;
+    }
+
+    @Override
+    public AbstractTuple getRest() {
+        return rest;
     }
 
     @Override
     public boolean getHasRestField() {
-        return super.getHasRestField();
+        return true;
     }
 
     @Override
@@ -29,10 +35,18 @@ final class Tuple_OBL extends AbstractTuple {
             return throwIndexOutOfBounds(index);
         }
         switch (index) {
-            case 0: return java.lang.Object.class;
-            case 1: return boolean.class;
-            case 2: return long.class;
-            default: return throwIndexOutOfBounds(index);
+            case 0: return int.class;
+            case 1: return java.lang.Object.class;
+            case 2: return boolean.class;
+            case 3: return int.class;
+            case 4: return java.lang.Object.class;
+            case 5: return boolean.class;
+            case 6: return int.class;
+            default:
+                if (this.rest == null) {
+                    throwIllegalStateException(index);
+                }
+                return this.rest.getFieldType(index - 7);
         }
     }
 
@@ -45,19 +59,59 @@ final class Tuple_OBL extends AbstractTuple {
             case 0: return this.item0;
             case 1: return this.item1;
             case 2: return this.item2;
-            default: return throwIndexOutOfBounds(index);
+            case 3: return this.item3;
+            case 4: return this.item4;
+            case 5: return this.item5;
+            case 6: return this.item6;
+            default:
+                if (this.rest == null) {
+                    return throwIndexOutOfBounds(index);
+                }
+                return this.rest.getItem(index - 7);
         }
     }
 
     @Override
-    public long getLong(int index) {
+    public void setItem(int index, Object value) {
+        if (index < 0) {
+            throwIndexOutOfBounds(index);
+            return;
+        }
+        switch (index) {
+            case 0: this.item0 = ((Integer)value).intValue(); return;
+            case 1: this.item1 = value; return;
+            case 2: this.item2 = ((Boolean)value).booleanValue(); return;
+            case 3: this.item3 = ((Integer)value).intValue(); return;
+            case 4: this.item4 = value; return;
+            case 5: this.item5 = ((Boolean)value).booleanValue(); return;
+            case 6: this.item6 = ((Integer)value).intValue(); return;
+            default:
+                if (this.rest == null) {
+                    throwIllegalStateException(index);
+                }
+                this.rest.setItem(index - 7, value);
+        }
+    }
+
+    @Override
+    public int getInt(int index) {
         if (index < 0) {
             return throwIndexOutOfBounds(index);
         }
         switch (index) {
-            case 2: return this.item2;
-            case 0,1: throwClassCastException(index, "Long");
-            default: return throwIndexOutOfBounds(index);
+            case 0: return this.item0;
+            case 3: return this.item3;
+            case 6: return this.item6;
+            case 1:
+            case 2:
+            case 4:
+            case 5:
+                throwClassCastException(index, "Int");
+            default:
+                if (this.rest == null) {
+                    throwIllegalStateException(index);
+                }
+                return this.rest.getInt(index - 7);
         }
     }
 
@@ -67,22 +121,66 @@ final class Tuple_OBL extends AbstractTuple {
             return throwIndexOutOfBounds(index);
         }
         switch (index) {
-            case 1: return this.item1;
-            case 0: throwClassCastException(index, "Boolean");
-            case 2: throwClassCastException(index, "Boolean");
-            default: return throwIndexOutOfBounds(index);
+            case 2: return this.item2;
+            case 5: return this.item5;
+            case 0:
+            case 1:
+            case 3:
+            case 4:
+            case 6:
+                throwClassCastException(index, "Boolean");
+            default:
+                if (this.rest == null) {
+                    throwIllegalStateException(index);
+                }
+                return this.rest.getBoolean(index - 7);
         }
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder("Tuple_OBL(");
-        sb.append("item0=").append(this.item0);
-        sb.append(", ");
-        sb.append("item1=").append(this.item1);
-        sb.append(", ");
-        sb.append("item2=").append(this.item2);
-        sb.append(")");
-        return sb.toString();
+    public void setInt(int index, int value) {
+        if (index < 0) {
+            throwIndexOutOfBounds(index);
+            return;
+        }
+        switch (index) {
+            case 0: this.item0 = value; return;
+            case 3: this.item3 = value; return;
+            case 6: this.item6 = value; return;
+            case 1:
+            case 2:
+            case 4:
+            case 5:
+                throwClassCastException(index, "Int");
+            default:
+                if (this.rest == null) {
+                    throwIllegalStateException(index);
+                }
+                this.rest.setInt(index - 7, value);
+        }
     }
+
+    @Override
+    public void setBoolean(int index, boolean value) {
+        if (index < 0) {
+            throwIndexOutOfBounds(index);
+            return;
+        }
+        switch (index) {
+            case 2: this.item2 = value; return;
+            case 5: this.item5 = value; return;
+            case 0:
+            case 1:
+            case 3:
+            case 4:
+            case 6:
+                throwClassCastException(index, "Boolean");
+            default:
+                if (this.rest == null) {
+                    throwIllegalStateException(index);
+                }
+                this.rest.setBoolean(index - 7, value);
+        }
+    }
+
 }

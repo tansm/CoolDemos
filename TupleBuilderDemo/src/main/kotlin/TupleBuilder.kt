@@ -1,223 +1,261 @@
 package com.example.orm
 
+import java.io.StringWriter
+import java.net.URI
+import javax.tools.*
+
 /**
- * TupleBuilder: 负责根据给定的类型组合动态创建元组类的 Java 源代码字符串。
- * 它不再使用 Byte Buddy，而是生成可编译的 Java 源代码。
+ * TupleBuilder: 负责根据给定的类型组合动态创建元组类的 Java 源代码字符串，并负责编译和加载。
  */
 class TupleBuilder(
-    val basePackage: String = "com.kingdee.orm.generated"
+    val basePackage: String = "com.kingdee.orm.generated",
+    parentClassLoader: ClassLoader = Thread.currentThread().contextClassLoader
 ) {
-
-    /**
-     * 辅助函数：根据 Class 获取其单字母缩写。
-     * 原始类型使用首字母，所有引用类型（包括 String）统一为 'O' (Object)。
-     */
-    private fun getTypeAbbreviation(clazz: Class<*>): String {
-        return when (clazz) {
-            Integer.TYPE -> "I" // int.class
-            java.lang.Long.TYPE -> "L"    // long.class
-            java.lang.Boolean.TYPE -> "B" // boolean.class
-            java.lang.Byte.TYPE -> "Y"    // byte.class
-            java.lang.Short.TYPE -> "S"   // short.class
-            Character.TYPE -> "C" // char.class
-            java.lang.Float.TYPE -> "F"   // float.class
-            java.lang.Double.TYPE -> "D"  // double.class
-            else -> "O" // 所有其他引用类型，包括 String, Any, 以及自定义对象，都用 'O' 表示 Object
+    // 内部内存 ClassLoader
+    private class InMemoryClassLoader(parent: ClassLoader) : ClassLoader(parent) {
+        private val classBytes = mutableMapOf<String, ByteArray>()
+        fun addClass(className: String, bytes: ByteArray) {
+            classBytes[className] = bytes
+        }
+        override fun findClass(name: String): Class<*>? {
+            val bytes = classBytes[name]
+            return if (bytes != null) {
+                defineClass(name, bytes, 0, bytes.size)
+            } else {
+                super.findClass(name)
+            }
         }
     }
 
-    /**
-     * 公共函数：计算动态生成的元组类的全限定名。
-     * 此方法只基于当前分段的类型缩写和是否包含 rest 字段生成名称。
-     *
-     * @param directTypes 当前元组分段的直接字段类型列表。
-     * @param hasRestField 当前元组分段是否包含 rest 字段。
-     * @return 计算出的类全限定名。
-     */
+    private val compiler: JavaCompiler = ToolProvider.getSystemJavaCompiler()
+        ?: throw IllegalStateException("JDK (not JRE) is required for runtime compilation.")
+    private val fileManager: StandardJavaFileManager = compiler.getStandardFileManager(null, null, null)
+    private val inMemoryClassLoader = InMemoryClassLoader(parentClassLoader)
+
+    // 内存中的 Java 源文件对象
+    private class StringJavaFileObject(className: String, val code: String) : SimpleJavaFileObject(
+        URI.create("string:///" + className.replace('.', '/') + JavaFileObject.Kind.SOURCE.extension), JavaFileObject.Kind.SOURCE
+    ) {
+        override fun getCharContent(ignoreEncodingErrors: Boolean): CharSequence = code
+    }
+
+    // 内存中的字节码对象
+    private class ByteArrayJavaFileObject(name: String, kind: JavaFileObject.Kind) : SimpleJavaFileObject(
+        URI.create("string:///" + name.replace('.', '/') + kind.extension), kind
+    ) {
+        var bytes: ByteArray? = null
+        override fun openInputStream() = bytes?.inputStream() ?: throw IllegalStateException("Bytes not set")
+        override fun openOutputStream() = object : java.io.ByteArrayOutputStream() {
+            override fun close() {
+                super.close()
+                bytes = toByteArray()
+            }
+        }
+    }
+
+    // 内存文件管理器
+    private class InMemoryJavaFileManager(standardManager: StandardJavaFileManager, val classLoader: InMemoryClassLoader) :
+        ForwardingJavaFileManager<JavaFileManager>(standardManager) {
+        private val outputFiles = mutableMapOf<String, ByteArrayJavaFileObject>()
+        override fun getJavaFileForOutput(
+            location: JavaFileManager.Location?,
+            className: String,
+            kind: JavaFileObject.Kind,
+            sibling: FileObject?
+        ): JavaFileObject {
+            val outputFile = ByteArrayJavaFileObject(className, kind)
+            outputFiles[className] = outputFile
+            return outputFile
+        }
+        override fun getClassLoader(location: JavaFileManager.Location?): ClassLoader {
+            return classLoader
+        }
+        fun getBytes(className: String): ByteArray? {
+            return outputFiles[className]?.bytes
+        }
+    }
+
+    private val inMemoryFileManager = InMemoryJavaFileManager(fileManager, inMemoryClassLoader)
+
+    val classLoader : ClassLoader get() = inMemoryClassLoader
+
+    fun compileTupleClass(types: List<Class<*>>, hasRestField: Boolean, segmentClassName: String): Class<*> {
+        val sourceCode = buildTupleSource(types, hasRestField)
+        val compilationUnits = listOf(StringJavaFileObject(segmentClassName, sourceCode))
+        val diagnostics = DiagnosticCollector<JavaFileObject>()
+        val task = compiler.getTask(
+            StringWriter(),
+            inMemoryFileManager,
+            diagnostics,
+            null,
+            null,
+            compilationUnits
+        )
+        val success = task.call()
+        if (!success) {
+            diagnostics.diagnostics.forEach { println(it) }
+            throw RuntimeException("Compilation failed for $segmentClassName. Diagnostics: $diagnostics")
+        }
+        val compiledBytes = inMemoryFileManager.getBytes(segmentClassName)
+        if (compiledBytes == null) {
+            throw IllegalStateException("Compiled bytes not found for $segmentClassName after successful compilation.")
+        }
+        inMemoryClassLoader.addClass(segmentClassName, compiledBytes)
+        return inMemoryClassLoader.loadClass(segmentClassName)
+    }
+
+    // 下面为源码生成相关内容（与原有一致）
+    private fun getTypeAbbreviation(clazz: Class<*>): String {
+        return when (clazz) {
+            Integer.TYPE -> "I"
+            java.lang.Long.TYPE -> "L"
+            java.lang.Boolean.TYPE -> "B"
+            java.lang.Byte.TYPE -> "Y"
+            java.lang.Short.TYPE -> "S"
+            Character.TYPE -> "C"
+            java.lang.Float.TYPE -> "F"
+            java.lang.Double.TYPE -> "D"
+            else -> "O"
+        }
+    }
+
     fun generateTupleClassName(directTypes: List<Class<*>>, hasRestField: Boolean): String {
         val typeAbbr = directTypes.joinToString("") { getTypeAbbreviation(it) }
-        val restSuffix = if (hasRestField) "R" else "" // 'R' for ITuple
-        // 格式：Tuple_TypeAbbr[RestSuffix]
+        val restSuffix = if (hasRestField) "R" else ""
         return "$basePackage.Tuple_${typeAbbr}$restSuffix"
     }
 
-    /**
-     * 构建一个元组类的 Java 源代码字符串。
-     *
-     * @param directTypes 当前元组块的字段类型列表 (最多 MAX_DIRECT_FIELDS 个)。
-     * @param hasRestField 当前元组块是否包含 rest 字段。
-     * @return 动态生成的元组分段的 Java 源代码字符串。
-     */
     fun buildTupleSource(directTypes: List<Class<*>>, hasRestField: Boolean): String {
         val className = generateTupleClassName(directTypes, hasRestField).substringAfterLast('.')
-
-        val sourceBuilder = StringBuilder()
-        sourceBuilder.append("package $basePackage;\n\n")
-        val tfName = AbstractTuple::class.java.name // 获取 AbstractTuple 的全限定名
-        sourceBuilder.append("import $tfName;\n") // 使用全限定名导入
-        sourceBuilder.append("import java.lang.Class;\n")
-
-        sourceBuilder.append("public final class $className extends ${AbstractTuple::class.java.simpleName} {\n")
-
-        // 定义字段
-        directTypes.forEachIndexed { index, clazz ->
-            // 字段类型声明也应该与 getFieldType 的返回类型一致：非原始类型声明为 Object
-            val fieldType = if (clazz.isPrimitive) clazz.canonicalName else "Object"
-            sourceBuilder.append("    public $fieldType item$index;\n")
-        }
-        if (hasRestField) {
-            sourceBuilder.append("    public ${AbstractTuple::class.java.canonicalName} rest;\n")
-        }
-        sourceBuilder.append("\n")
-
-        // 默认构造函数
-        sourceBuilder.append("    public $className() {}\n\n")
-
-        // getDirectSize() 方法
-        sourceBuilder.append("    @Override\n")
-        sourceBuilder.append("    public int getDirectSize() {\n")
-        sourceBuilder.append("        return ${directTypes.size};\n")
-        sourceBuilder.append("    }\n\n")
-
-        if(hasRestField) {
-            // getRest()
-            sourceBuilder.append("@Override\n")
-            sourceBuilder.append("public AbstractTuple getRest() {")
-            sourceBuilder.append("    return rest;")
-            sourceBuilder.append("}")
-
-            // hasRestField()
-            sourceBuilder.append("@Override\n")
-            sourceBuilder.append("public boolean getHasRestField() {")
-            sourceBuilder.append("    return true;")
-            sourceBuilder.append("}")
-        }
-
-        // getFieldType(index) 方法
-        sourceBuilder.append("    @Override\n")
-        sourceBuilder.append("    public Class<?> getFieldType(int index) {\n")
-        sourceBuilder.append("        if (index < 0) {\n")
-        sourceBuilder.append("            return throwIndexOutOfBounds(index);\n") // 调用统一方法
-        sourceBuilder.append("        }\n")
-        sourceBuilder.append("        switch (index) {\n")
-        directTypes.forEachIndexed { i, clazz ->
-            // 关键修正：对于非原始类型，统一返回 Object.class
-            val returnType = if (clazz.isPrimitive) clazz.canonicalName else "java.lang.Object"
-            sourceBuilder.append("            case $i: return $returnType.class;\n")
-        }
-        if (hasRestField) {
-            sourceBuilder.append("            default:\n")
-            sourceBuilder.append("                if (this.rest == null) {\n")
-            sourceBuilder.append("                    throwIllegalStateException(index);\n") // 调用统一方法
-            sourceBuilder.append("                }\n")
-            sourceBuilder.append("                return this.rest.getFieldType(index - ${directTypes.size});\n")
-        } else {
-            sourceBuilder.append("            default: return throwIndexOutOfBounds(index);\n") // 调用统一方法
-        }
-        sourceBuilder.append("        }\n")
-        sourceBuilder.append("    }\n\n")
-
-        // getItem(index) 方法 (需要处理装箱)
-        sourceBuilder.append("    @Override\n")
-        sourceBuilder.append("    public Object getItem(int index) {\n")
-        sourceBuilder.append("        if (index < 0) {\n")
-        sourceBuilder.append("            return throwIndexOutOfBounds(index);\n") // 调用统一方法
-        sourceBuilder.append("        }\n")
-        sourceBuilder.append("        switch (index) {\n")
-        directTypes.forEachIndexed { i, _ ->
-            sourceBuilder.append("            case $i: return this.item$i;\n")
-        }
-        if (hasRestField) {
-            sourceBuilder.append("            default:\n")
-            sourceBuilder.append("                if (this.rest == null) {\n")
-            sourceBuilder.append("                    return throwIndexOutOfBounds(index);\n") // 调用统一方法
-            sourceBuilder.append("                }\n")
-            sourceBuilder.append("                return this.rest.getItem(index - ${directTypes.size});\n")
-        } else {
-            sourceBuilder.append("            default: return throwIndexOutOfBounds(index);\n") // 调用统一方法
-        }
-        sourceBuilder.append("        }\n")
-        sourceBuilder.append("    }\n\n")
-
-        // setItem(index, value) 方法
-        sourceBuilder.append("    @Override\n")
-        sourceBuilder.append("    public void setItem(int index, Object value) {\n")
-        sourceBuilder.append("        if (index < 0) {\n")
-        sourceBuilder.append("            throwIndexOutOfBounds(index);\n")
-        sourceBuilder.append("            return;\n")
-        sourceBuilder.append("        }\n")
-        sourceBuilder.append("        switch (index) {\n")
-        directTypes.forEachIndexed { i, clazz ->
-            if (clazz.isPrimitive) {
-                // 需要拆箱
-                val cast = when (clazz) {
-                    Integer.TYPE -> "((Integer)value).intValue()"
-                    java.lang.Long.TYPE -> "((Long)value).longValue()"
-                    java.lang.Boolean.TYPE -> "((Boolean)value).booleanValue()"
-                    java.lang.Byte.TYPE -> "((Byte)value).byteValue()"
-                    java.lang.Short.TYPE -> "((Short)value).shortValue()"
-                    Character.TYPE -> "((Character)value).charValue()"
-                    java.lang.Float.TYPE -> "((Float)value).floatValue()"
-                    java.lang.Double.TYPE -> "((Double)value).doubleValue()"
-                    else -> "value"
-                }
-                sourceBuilder.append("            case $i: this.item$i = $cast; return;\n")
-            } else {
-                // 直接赋值
-                sourceBuilder.append("            case $i: this.item$i = value; return;\n")
+        val generatedSource = with(StringBuilder()) {
+            append("package $basePackage;\n\n")
+            val tfName = AbstractTuple::class.java.name
+            append("import $tfName;\n")
+            append("import java.lang.Class;\n")
+            append("public final class $className extends ${AbstractTuple::class.java.simpleName} {\n")
+            directTypes.forEachIndexed { index, clazz ->
+                val fieldType = if (clazz.isPrimitive) clazz.canonicalName else "Object"
+                append("    public $fieldType item$index;\n")
             }
+            if (hasRestField) {
+                append("    public ${AbstractTuple::class.java.canonicalName} rest;\n")
+            }
+            append("\n")
+            append("    public $className() {}\n\n")
+            append("    @Override\n")
+            append("    public int getDirectSize() {\n")
+            append("        return ${directTypes.size};\n")
+            append("    }\n\n")
+            if (hasRestField) {
+                append("@Override\n")
+                append("public AbstractTuple getRest() {\n")
+                append("    return rest;\n")
+                append("}\n\n")
+                append("@Override\n")
+                append("public boolean getHasRestField() {\n")
+                append("    return true;\n")
+                append("}\n\n")
+            }
+            append("    @Override\n")
+            append("    public Class<?> getFieldType(int index) {\n")
+            append("        if (index < 0) {\n")
+            append("            return throwIndexOutOfBounds(index);\n")
+            append("        }\n")
+            append("        switch (index) {\n")
+            directTypes.forEachIndexed { i, clazz ->
+                val returnType = if (clazz.isPrimitive) clazz.canonicalName else "java.lang.Object"
+                append("            case $i: return $returnType.class;\n")
+            }
+            if (hasRestField) {
+                append("            default:\n")
+                append("                if (this.rest == null) {\n")
+                append("                    throwIllegalStateException(index);\n")
+                append("                }\n")
+                append("                return this.rest.getFieldType(index - ${directTypes.size});\n")
+            } else {
+                append("            default: return throwIndexOutOfBounds(index);\n")
+            }
+            append("        }\n")
+            append("    }\n\n")
+            append("    @Override\n")
+            append("    public Object getItem(int index) {\n")
+            append("        if (index < 0) {\n")
+            append("            return throwIndexOutOfBounds(index);\n")
+            append("        }\n")
+            append("        switch (index) {\n")
+            directTypes.forEachIndexed { i, _ ->
+                append("            case $i: return this.item$i;\n")
+            }
+            if (hasRestField) {
+                append("            default:\n")
+                append("                if (this.rest == null) {\n")
+                append("                    return throwIndexOutOfBounds(index);\n")
+                append("                }\n")
+                append("                return this.rest.getItem(index - ${directTypes.size});\n")
+            } else {
+                append("            default: return throwIndexOutOfBounds(index);\n")
+            }
+            append("        }\n")
+            append("    }\n\n")
+            append("    @Override\n")
+            append("    public void setItem(int index, Object value) {\n")
+            append("        if (index < 0) {\n")
+            append("            throwIndexOutOfBounds(index);\n")
+            append("            return;\n")
+            append("        }\n")
+            append("        switch (index) {\n")
+            directTypes.forEachIndexed { i, clazz ->
+                if (clazz.isPrimitive) {
+                    val cast = when (clazz) {
+                        Integer.TYPE -> "((Integer)value).intValue()"
+                        java.lang.Long.TYPE -> "((Long)value).longValue()"
+                        java.lang.Boolean.TYPE -> "((Boolean)value).booleanValue()"
+                        java.lang.Byte.TYPE -> "((Byte)value).byteValue()"
+                        java.lang.Short.TYPE -> "((Short)value).shortValue()"
+                        Character.TYPE -> "((Character)value).charValue()"
+                        java.lang.Float.TYPE -> "((Float)value).floatValue()"
+                        java.lang.Double.TYPE -> "((Double)value).doubleValue()"
+                        else -> "value"
+                    }
+                    append("            case $i: this.item$i = $cast; return;\n")
+                } else {
+                    append("            case $i: this.item$i = value; return;\n")
+                }
+            }
+            if (hasRestField) {
+                append("            default:\n")
+                append("                if (this.rest == null) {\n")
+                append("                    throwIllegalStateException(index);\n")
+                append("                }\n")
+                append("                this.rest.setItem(index - ${directTypes.size}, value);\n")
+            } else {
+                append("            default: throwIndexOutOfBounds(index);\n")
+            }
+            append("        }\n")
+            append("    }\n\n")
+            append(generatePrimitiveGetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Byte", "byte", "java.lang.Byte", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Short", "short", "java.lang.Short", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Char", "char", "java.lang.Character", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Byte", "byte", "java.lang.Byte", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Short", "short", "java.lang.Short", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Char", "char", "java.lang.Character", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
+            append(generatePrimitiveSetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
+            append("}\n")
+            toString()
         }
-        if (hasRestField) {
-            sourceBuilder.append("            default:\n")
-            sourceBuilder.append("                if (this.rest == null) {\n")
-            sourceBuilder.append("                    throwIllegalStateException(index);\n")
-            sourceBuilder.append("                }\n")
-            sourceBuilder.append("                this.rest.setItem(index - ${directTypes.size}, value);\n")
-            sourceBuilder.append("                return;\n")
-        } else {
-            sourceBuilder.append("            default: throwIndexOutOfBounds(index);\n")
-        }
-        sourceBuilder.append("        }\n")
-        sourceBuilder.append("    }\n\n")
-
-        // 生成所有原始类型 getter 方法
-        sourceBuilder.append(generatePrimitiveGetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveGetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveGetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveGetterSource("Byte", "byte", "java.lang.Byte", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveGetterSource("Short", "short", "java.lang.Short", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveGetterSource("Char", "char", "java.lang.Character", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveGetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveGetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
-
-        // 生成所有原始类型 setter 方法
-        sourceBuilder.append(generatePrimitiveSetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveSetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveSetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveSetterSource("Byte", "byte", "java.lang.Byte", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveSetterSource("Short", "short", "java.lang.Short", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveSetterSource("Char", "char", "java.lang.Character", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveSetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
-        sourceBuilder.append(generatePrimitiveSetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
-
-        sourceBuilder.append("}\n")
-
-        val generatedSource = sourceBuilder.toString()
-        //println("Generated Source for $className:\n$generatedSource") // 打印生成的源代码
-
+        //println("Generated Source for $className:\n$generatedSource")
         return generatedSource
     }
 
-    /**
-     * 生成原始类型 getter 方法的源代码。
-     *
-     * @param methodNameSuffix 方法名后缀 (例如 "Int", "Long")。
-     * @param primitiveTypeName 原始类型名称 (例如 "int", "long")。
-     * @param wrapperTypeName 包装类型名称 (例如 "java.lang.Integer", "java.lang.Long")。
-     * @param directTypes 当前元组块的直接字段类型列表。
-     * @param hasRestField 当前元组块是否包含 rest 字段。
-     * @return 生成的 getter 方法的源代码字符串。
-     */
     private fun generatePrimitiveGetterSource(
         methodNameSuffix: String,
         primitiveTypeName: String,
@@ -227,7 +265,6 @@ class TupleBuilder(
     ): String {
         val correctTypeIndices = mutableListOf<Int>()
         val wrongTypeIndices = mutableListOf<Int>()
-
         directTypes.forEachIndexed { i, clazz ->
             if (clazz.name == primitiveTypeName || clazz.canonicalName == wrapperTypeName) {
                 correctTypeIndices.add(i)
@@ -235,71 +272,41 @@ class TupleBuilder(
                 wrongTypeIndices.add(i)
             }
         }
-
-        // 当所有字段都不符合要输出的类型，就可以简化使用默认实现，从而减少字节码数量
         if (correctTypeIndices.isEmpty()) {
             return ""
         }
-
-        val methodBuilder = StringBuilder()
-        methodBuilder.append("    @Override\n")
-        methodBuilder.append("    public $primitiveTypeName get$methodNameSuffix(int index) {\n")
-        methodBuilder.append("        if (index < 0) {\n")
-        methodBuilder.append("            return throwIndexOutOfBounds(index);\n") // 调用统一方法
-        methodBuilder.append("        }\n")
-        methodBuilder.append("        switch (index) {\n")
-
-        // Generate cases for correct types (individual for clarity and correctness if mixed)
-        correctTypeIndices.forEach { i ->
-            methodBuilder.append("            case $i: return this.item$i;\n")
-        }
-
-        // Generate cases for wrong types, grouped if consecutive
-        if (wrongTypeIndices.isNotEmpty()) {
-            val groupedIndices = mutableListOf<MutableList<Int>>()
-            var currentGroup = mutableListOf<Int>()
-
-            wrongTypeIndices.forEach { idx ->
-                if (currentGroup.isEmpty() || currentGroup.last() == idx - 1) {
-                    currentGroup.add(idx)
-                } else {
-                    groupedIndices.add(currentGroup)
-                    currentGroup = mutableListOf(idx)
-                }
+        with(StringBuilder()) {
+            append("    @Override\n")
+            append("    public $primitiveTypeName get$methodNameSuffix(int index) {\n")
+            append("        if (index < 0) {\n")
+            append("            return throwIndexOutOfBounds(index);\n")
+            append("        }\n")
+            append("        switch (index) {\n")
+            correctTypeIndices.forEach { i ->
+                append("            case $i: return this.item$i;\n")
             }
-            if (currentGroup.isNotEmpty()) {
-                groupedIndices.add(currentGroup)
+            // JDK 1.8 兼容写法：每个 case 单独一行
+            wrongTypeIndices.forEach { i ->
+                append("            case $i:\n")
             }
-
-            groupedIndices.forEach { group ->
-                methodBuilder.append("            case ${group.joinToString(",")}: throwClassCastException(index, \"$methodNameSuffix\");\n")
+            if (wrongTypeIndices.isNotEmpty()) {
+                append("                throwClassCastException(index, \"$methodNameSuffix\");\n")
             }
+            if (hasRestField) {
+                append("            default:\n")
+                append("                if (this.rest == null) {\n")
+                append("                    throwIllegalStateException(index);\n")
+                append("                }\n")
+                append("                return this.rest.get$methodNameSuffix(index - ${directTypes.size});\n")
+            } else {
+                append("            default: return throwIndexOutOfBounds(index);\n")
+            }
+            append("        }\n")
+            append("    }\n\n")
+            return toString()
         }
-
-        if (hasRestField) {
-            methodBuilder.append("            default:\n")
-            methodBuilder.append("                if (this.rest == null) {\n")
-            methodBuilder.append("                    throwIllegalStateException(index);\n") // 调用统一方法
-            methodBuilder.append("                }\n")
-            methodBuilder.append("                return this.rest.get$methodNameSuffix(index - ${directTypes.size});\n")
-        } else {
-            methodBuilder.append("            default: return throwIndexOutOfBounds(index);\n") // 调用统一方法
-        }
-        methodBuilder.append("        }\n")
-        methodBuilder.append("    }\n\n")
-        return methodBuilder.toString()
     }
 
-    /**
-     * 生成原始类型 setter 方法的源代码。
-     *
-     * @param methodNameSuffix 方法名后缀 (例如 "Int", "Long")。
-     * @param primitiveTypeName 原始类型名称 (例如 "int", "long")。
-     * @param wrapperTypeName 包装类型名称 (例如 "java.lang.Integer", "java.lang.Long")。
-     * @param directTypes 当前元组块的直接字段类型列表。
-     * @param hasRestField 当前元组块是否包含 rest 字段。
-     * @return 生成的 setter 方法的源代码字符串。
-     */
     private fun generatePrimitiveSetterSource(
         methodNameSuffix: String,
         primitiveTypeName: String,
@@ -309,7 +316,6 @@ class TupleBuilder(
     ): String {
         val correctTypeIndices = mutableListOf<Int>()
         val wrongTypeIndices = mutableListOf<Int>()
-
         directTypes.forEachIndexed { i, clazz ->
             if (clazz.name == primitiveTypeName || clazz.canonicalName == wrapperTypeName) {
                 correctTypeIndices.add(i)
@@ -317,60 +323,39 @@ class TupleBuilder(
                 wrongTypeIndices.add(i)
             }
         }
-
-        // 当所有字段都不符合要输出的类型，就可以简化使用默认实现，从而减少字节码数量
         if (correctTypeIndices.isEmpty()) {
             return ""
         }
-
-        val methodBuilder = StringBuilder()
-        methodBuilder.append("    @Override\n")
-        methodBuilder.append("    public void set$methodNameSuffix(int index, $primitiveTypeName value) {\n")
-        methodBuilder.append("        if (index < 0) {\n")
-        methodBuilder.append("            throwIndexOutOfBounds(index);\n") // 调用统一方法
-        methodBuilder.append("            return;\n")
-        methodBuilder.append("        }\n")
-        methodBuilder.append("        switch (index) {\n")
-
-        // Generate cases for correct types (individual for clarity and correctness if mixed)
-        correctTypeIndices.forEach { i ->
-            methodBuilder.append("            case $i: this.item$i = value; return;\n")
-        }
-
-        // Generate cases for wrong types, grouped if consecutive
-        if (wrongTypeIndices.isNotEmpty()) {
-            val groupedIndices = mutableListOf<MutableList<Int>>()
-            var currentGroup = mutableListOf<Int>()
-
-            wrongTypeIndices.forEach { idx ->
-                if (currentGroup.isEmpty() || currentGroup.last() == idx - 1) {
-                    currentGroup.add(idx)
-                } else {
-                    groupedIndices.add(currentGroup)
-                    currentGroup = mutableListOf(idx)
-                }
+        with(StringBuilder()) {
+            append("    @Override\n")
+            append("    public void set$methodNameSuffix(int index, $primitiveTypeName value) {\n")
+            append("        if (index < 0) {\n")
+            append("            throwIndexOutOfBounds(index);\n")
+            append("            return;\n")
+            append("        }\n")
+            append("        switch (index) {\n")
+            correctTypeIndices.forEach { i ->
+                append("            case $i: this.item$i = value; return;\n")
             }
-            if (currentGroup.isNotEmpty()) {
-                groupedIndices.add(currentGroup)
+            // JDK 1.8 兼容写法：每个 case 单独一行
+            wrongTypeIndices.forEach { i ->
+                append("            case $i:\n")
             }
-
-            groupedIndices.forEach { group ->
-                methodBuilder.append("            case ${group.joinToString(",")}: throwClassCastException(index, \"$methodNameSuffix\");\n")
+            if (wrongTypeIndices.isNotEmpty()) {
+                append("                throwClassCastException(index, \"$methodNameSuffix\");\n")
             }
+            if (hasRestField) {
+                append("            default:\n")
+                append("                if (this.rest == null) {\n")
+                append("                    throwIllegalStateException(index);\n")
+                append("                }\n")
+                append("                this.rest.set$methodNameSuffix(index - ${directTypes.size}, value);\n")
+            } else {
+                append("            default: throwIndexOutOfBounds(index);\n")
+            }
+            append("        }\n")
+            append("    }\n\n")
+            return toString()
         }
-
-        if (hasRestField) {
-            methodBuilder.append("            default:\n")
-            methodBuilder.append("                if (this.rest == null) {\n")
-            methodBuilder.append("                    throwIllegalStateException(index);\n") // 调用统一方法
-            methodBuilder.append("                }\n")
-            methodBuilder.append("                this.rest.set$methodNameSuffix(index - ${directTypes.size}, value);\n")
-            methodBuilder.append("                return;\n")
-        } else {
-            methodBuilder.append("            default: throwIndexOutOfBounds(index);\n") // 调用统一方法
-        }
-        methodBuilder.append("        }\n")
-        methodBuilder.append("    }\n\n")
-        return methodBuilder.toString()
     }
 }
