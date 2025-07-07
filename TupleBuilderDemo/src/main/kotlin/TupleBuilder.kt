@@ -1,5 +1,6 @@
 package com.example.orm
 
+import java.io.PrintStream
 import java.io.StringWriter
 import java.net.URI
 import javax.tools.*
@@ -78,6 +79,7 @@ class TupleBuilder(
     private val inMemoryFileManager = InMemoryJavaFileManager(fileManager, inMemoryClassLoader)
 
     val classLoader : ClassLoader get() = inMemoryClassLoader
+    var sourceCodeOutStream : PrintStream? = null
 
     fun compileTupleClass(types: List<Class<*>>, hasRestField: Boolean, segmentClassName: String): Class<*> {
         val sourceCode = buildTupleSource(types, hasRestField)
@@ -131,7 +133,7 @@ class TupleBuilder(
             append("package $basePackage;\n\n")
             val tfName = AbstractTuple::class.java.name
             append("import $tfName;\n")
-            append("import java.lang.Class;\n")
+            append("import java.lang.Class;\n\n")
             append("public final class $className extends ${AbstractTuple::class.java.simpleName} {\n")
             directTypes.forEachIndexed { index, clazz ->
                 val fieldType = if (clazz.isPrimitive) clazz.canonicalName else "Object"
@@ -233,26 +235,29 @@ class TupleBuilder(
             }
             append("        }\n")
             append("    }\n\n")
-            append(generatePrimitiveGetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
-            append(generatePrimitiveGetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
-            append(generatePrimitiveGetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes, hasRestField))
-            append(generatePrimitiveGetterSource("Byte", "byte", "java.lang.Byte", directTypes, hasRestField))
-            append(generatePrimitiveGetterSource("Short", "short", "java.lang.Short", directTypes, hasRestField))
-            append(generatePrimitiveGetterSource("Char", "char", "java.lang.Character", directTypes, hasRestField))
-            append(generatePrimitiveGetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
-            append(generatePrimitiveGetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Int", "int", "java.lang.Integer", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Long", "long", "java.lang.Long", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Byte", "byte", "java.lang.Byte", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Short", "short", "java.lang.Short", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Char", "char", "java.lang.Character", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Float", "float", "java.lang.Float", directTypes, hasRestField))
-            append(generatePrimitiveSetterSource("Double", "double", "java.lang.Double", directTypes, hasRestField))
+            append(generatePrimitiveGetterSource("Int", "int", "java.lang.Integer", directTypes))
+            append(generatePrimitiveGetterSource("Long", "long", "java.lang.Long", directTypes))
+            append(generatePrimitiveGetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes))
+            append(generatePrimitiveGetterSource("Byte", "byte", "java.lang.Byte", directTypes))
+            append(generatePrimitiveGetterSource("Short", "short", "java.lang.Short", directTypes))
+            append(generatePrimitiveGetterSource("Char", "char", "java.lang.Character", directTypes))
+            append(generatePrimitiveGetterSource("Float", "float", "java.lang.Float", directTypes))
+            append(generatePrimitiveGetterSource("Double", "double", "java.lang.Double", directTypes))
+
+            append(generatePrimitiveSetterSource("Int", "int", "java.lang.Integer", directTypes))
+            append(generatePrimitiveSetterSource("Long", "long", "java.lang.Long", directTypes))
+            append(generatePrimitiveSetterSource("Boolean", "boolean", "java.lang.Boolean", directTypes))
+            append(generatePrimitiveSetterSource("Byte", "byte", "java.lang.Byte", directTypes))
+            append(generatePrimitiveSetterSource("Short", "short", "java.lang.Short", directTypes))
+            append(generatePrimitiveSetterSource("Char", "char", "java.lang.Character", directTypes))
+            append(generatePrimitiveSetterSource("Float", "float", "java.lang.Float", directTypes))
+            append(generatePrimitiveSetterSource("Double", "double", "java.lang.Double", directTypes))
             append("}\n")
             toString()
         }
-        //println("Generated Source for $className:\n$generatedSource")
+
+        sourceCodeOutStream?.println(generatedSource)
+
         return generatedSource
     }
 
@@ -260,16 +265,12 @@ class TupleBuilder(
         methodNameSuffix: String,
         primitiveTypeName: String,
         wrapperTypeName: String,
-        directTypes: List<Class<*>>,
-        hasRestField: Boolean
+        directTypes: List<Class<*>>
     ): String {
         val correctTypeIndices = mutableListOf<Int>()
-        val wrongTypeIndices = mutableListOf<Int>()
         directTypes.forEachIndexed { i, clazz ->
             if (clazz.name == primitiveTypeName || clazz.canonicalName == wrapperTypeName) {
                 correctTypeIndices.add(i)
-            } else {
-                wrongTypeIndices.add(i)
             }
         }
         if (correctTypeIndices.isEmpty()) {
@@ -278,29 +279,11 @@ class TupleBuilder(
         with(StringBuilder()) {
             append("    @Override\n")
             append("    public $primitiveTypeName get$methodNameSuffix(int index) {\n")
-            append("        if (index < 0) {\n")
-            append("            return throwIndexOutOfBounds(index);\n")
-            append("        }\n")
             append("        switch (index) {\n")
             correctTypeIndices.forEach { i ->
                 append("            case $i: return this.item$i;\n")
             }
-            // JDK 1.8 兼容写法：每个 case 单独一行
-            wrongTypeIndices.forEach { i ->
-                append("            case $i:\n")
-            }
-            if (wrongTypeIndices.isNotEmpty()) {
-                append("                throwClassCastException(index, \"$methodNameSuffix\");\n")
-            }
-            if (hasRestField) {
-                append("            default:\n")
-                append("                if (this.rest == null) {\n")
-                append("                    throwIllegalStateException(index);\n")
-                append("                }\n")
-                append("                return this.rest.get$methodNameSuffix(index - ${directTypes.size});\n")
-            } else {
-                append("            default: return throwIndexOutOfBounds(index);\n")
-            }
+            append("            default: return super.get$methodNameSuffix(index);\n")
             append("        }\n")
             append("    }\n\n")
             return toString()
@@ -311,16 +294,12 @@ class TupleBuilder(
         methodNameSuffix: String,
         primitiveTypeName: String,
         wrapperTypeName: String,
-        directTypes: List<Class<*>>,
-        hasRestField: Boolean
+        directTypes: List<Class<*>>
     ): String {
         val correctTypeIndices = mutableListOf<Int>()
-        val wrongTypeIndices = mutableListOf<Int>()
         directTypes.forEachIndexed { i, clazz ->
             if (clazz.name == primitiveTypeName || clazz.canonicalName == wrapperTypeName) {
                 correctTypeIndices.add(i)
-            } else {
-                wrongTypeIndices.add(i)
             }
         }
         if (correctTypeIndices.isEmpty()) {
@@ -329,30 +308,11 @@ class TupleBuilder(
         with(StringBuilder()) {
             append("    @Override\n")
             append("    public void set$methodNameSuffix(int index, $primitiveTypeName value) {\n")
-            append("        if (index < 0) {\n")
-            append("            throwIndexOutOfBounds(index);\n")
-            append("            return;\n")
-            append("        }\n")
             append("        switch (index) {\n")
             correctTypeIndices.forEach { i ->
                 append("            case $i: this.item$i = value; return;\n")
             }
-            // JDK 1.8 兼容写法：每个 case 单独一行
-            wrongTypeIndices.forEach { i ->
-                append("            case $i:\n")
-            }
-            if (wrongTypeIndices.isNotEmpty()) {
-                append("                throwClassCastException(index, \"$methodNameSuffix\");\n")
-            }
-            if (hasRestField) {
-                append("            default:\n")
-                append("                if (this.rest == null) {\n")
-                append("                    throwIllegalStateException(index);\n")
-                append("                }\n")
-                append("                this.rest.set$methodNameSuffix(index - ${directTypes.size}, value);\n")
-            } else {
-                append("            default: throwIndexOutOfBounds(index);\n")
-            }
+            append("            default: super.set$methodNameSuffix(index, value);\n")
             append("        }\n")
             append("    }\n\n")
             return toString()

@@ -95,91 +95,39 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
 
     @Override
     public int getInt(int index) {
-        if (index < 0) {
-            return throwIndexOutOfBounds(index);
-        }
         switch (index) {
             case 0: return this.item0;
             case 3: return this.item3;
             case 6: return this.item6;
-            case 1:
-            case 2:
-            case 4:
-            case 5:
-                throwClassCastException(index, "Int");
-            default:
-                if (this.rest == null) {
-                    throwIllegalStateException(index);
-                }
-                return this.rest.getInt(index - 7);
+            default: return super.getInt(index);
         }
     }
 
     @Override
     public boolean getBoolean(int index) {
-        if (index < 0) {
-            return throwIndexOutOfBounds(index);
-        }
         switch (index) {
             case 2: return this.item2;
             case 5: return this.item5;
-            case 0:
-            case 1:
-            case 3:
-            case 4:
-            case 6:
-                throwClassCastException(index, "Boolean");
-            default:
-                if (this.rest == null) {
-                    throwIllegalStateException(index);
-                }
-                return this.rest.getBoolean(index - 7);
+            default: return super.getBoolean(index);
         }
     }
 
     @Override
     public void setInt(int index, int value) {
-        if (index < 0) {
-            throwIndexOutOfBounds(index);
-            return;
-        }
         switch (index) {
             case 0: this.item0 = value; return;
             case 3: this.item3 = value; return;
             case 6: this.item6 = value; return;
-            case 1:
-            case 2:
-            case 4:
-            case 5:
-                throwClassCastException(index, "Int");
-            default:
-                if (this.rest == null) {
-                    throwIllegalStateException(index);
-                }
-                this.rest.setInt(index - 7, value);
+            default: super.setInt(index, value);
         }
     }
 
     @Override
     public void setBoolean(int index, boolean value) {
-        if (index < 0) {
-            throwIndexOutOfBounds(index);
-            return;
-        }
         switch (index) {
             case 2: this.item2 = value; return;
             case 5: this.item5 = value; return;
-            case 0:
-            case 1:
-            case 3:
-            case 4:
-            case 6:
-                throwClassCastException(index, "Boolean");
-            default:
-                if (this.rest == null) {
-                    throwIllegalStateException(index);
-                }
-                this.rest.setBoolean(index - 7, value);
+            default: super.setBoolean(index, value);
         }
     }
 

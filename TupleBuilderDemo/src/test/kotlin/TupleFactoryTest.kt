@@ -12,6 +12,7 @@ class TupleFactoryTest {
         // 对于 Java 源代码编译，我们不需要特殊的 URLClassLoader，因为它会使用 ToolProvider.getSystemJavaCompiler()
         // 并且通过 InMemoryClassLoader 来加载生成的类。
         val tupleBuilder = TupleBuilder("com.mycompany.generated.tuples")
+        tupleBuilder.sourceCodeOutStream = System.out
         tupleFactory = TupleFactory(tupleBuilder)
     }
 
