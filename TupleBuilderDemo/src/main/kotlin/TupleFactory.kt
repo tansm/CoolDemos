@@ -30,7 +30,11 @@ class TupleFactory(private val tupleBuilder: TupleBuilder) {
      * @param allTypes 元组中字段的 Java Class 类型列表 (完整的类型列表)。
      * @return 动态生成的元组链的根 AbstractTuple 实例。
      */
-    fun getOrCreateTuple(allTypes: List<Class<*>>): AbstractTuple {
+    fun getOrCreateTuple(allTypes: List<Class<*>>, maxDirectFields : Int = MAX_DIRECT_FIELDS): AbstractTuple {
+        if(maxDirectFields <= 0){
+            throw IllegalArgumentException("maxDirectFields must be positive.")
+        }
+
         if (allTypes.isEmpty()) {
             val emptyTupleClass = getOrCreateTupleClass(emptyList(), false)
             return emptyTupleClass.getDeclaredConstructor().newInstance() as AbstractTuple
@@ -39,7 +43,7 @@ class TupleFactory(private val tupleBuilder: TupleBuilder) {
         var rootTupleInstance: AbstractTuple? = null
         var previousTupleInstance: AbstractTuple? = null
         while (currentStartIndex < allTypes.size) {
-            val currentChunkEndIndex = minOf(currentStartIndex + MAX_DIRECT_FIELDS, allTypes.size)
+            val currentChunkEndIndex = minOf(currentStartIndex + maxDirectFields, allTypes.size)
             val directTypesForThisSegment = allTypes.subList(currentStartIndex, currentChunkEndIndex)
             val hasRestFieldForThisSegment = currentChunkEndIndex < allTypes.size
             val segmentClass = getOrCreateTupleClass(directTypesForThisSegment, hasRestFieldForThisSegment)
@@ -47,8 +51,7 @@ class TupleFactory(private val tupleBuilder: TupleBuilder) {
             if (rootTupleInstance == null) {
                 rootTupleInstance = currentTupleInstance
             } else {
-                val restField = previousTupleInstance!!.javaClass.getDeclaredField("rest").apply { isAccessible = true }
-                restField.set(previousTupleInstance, currentTupleInstance)
+                previousTupleInstance!!.setRest(currentTupleInstance)
             }
             previousTupleInstance = currentTupleInstance
             currentStartIndex = currentChunkEndIndex

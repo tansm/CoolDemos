@@ -8,6 +8,9 @@ abstract class AbstractTuple : Iterable<Any?> {
 
     // 默认实现是 不包含 rest 字段。
     open fun getRest(): AbstractTuple? = null
+    open fun setRest(value : AbstractTuple?) {
+        throw IllegalStateException("not support rest field.")
+    }
 
     open val hasRestField: Boolean get() = false
 
@@ -22,7 +25,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getInt(index - 7)
+                return rest.getInt(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -34,7 +37,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getLong(index - 7)
+                return rest.getLong(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -46,7 +49,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getBoolean(index - 7)
+                return rest.getBoolean(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -58,7 +61,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getByte(index - 7)
+                return rest.getByte(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -70,7 +73,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getShort(index - 7)
+                return rest.getShort(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -82,7 +85,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getChar(index - 7)
+                return rest.getChar(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -94,7 +97,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getFloat(index - 7)
+                return rest.getFloat(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -106,7 +109,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                return rest.getDouble(index - 7)
+                return rest.getDouble(index - directSize)
             } else {
                 throwIllegalStateException(index)
             }
@@ -119,7 +122,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setInt(index - 7, value)
+                rest.setInt(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)
@@ -132,7 +135,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setLong(index - 7, value)
+                rest.setLong(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)
@@ -145,7 +148,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setBoolean(index - 7, value)
+                rest.setBoolean(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)
@@ -158,7 +161,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setByte(index - 7, value)
+                rest.setByte(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)
@@ -171,7 +174,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setShort(index - 7, value)
+                rest.setShort(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)
@@ -184,7 +187,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setChar(index - 7, value)
+                rest.setChar(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)
@@ -197,7 +200,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setFloat(index - 7, value)
+                rest.setFloat(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)
@@ -210,7 +213,7 @@ abstract class AbstractTuple : Iterable<Any?> {
         if (index >= directSize && hasRestField) {
             val rest = getRest()
             if (rest != null) {
-                rest.setDouble(index - 7, value)
+                rest.setDouble(index - directSize, value)
                 return
             } else {
                 throwIllegalStateException(index)

@@ -310,4 +310,32 @@ class TupleFactoryTest {
         assertEquals(Boolean::class.javaPrimitiveType, fields["item2"]?.type)
         assertEquals(Long::class.javaPrimitiveType, fields["item3"]?.type)
     }
+
+    @Test
+    fun testTupleWithCustomMaxDirectFields() {
+        val types = listOf(
+            Int::class.java, String::class.java, Boolean::class.java,
+            Double::class.java, Long::class.java, Float::class.java,
+            Short::class.java, Byte::class.java, Char::class.java
+        )
+        // maxDirectFields = 3，每3个字段为一段
+        val tuple : AbstractTuple? = tupleFactory.getOrCreateTuple(types, maxDirectFields = 3)
+        // 检查链条长度
+        var segment = tuple
+        var count = 0
+        while (segment != null) {
+            count++
+            segment = segment.getRest()
+        }
+        assertEquals(3, count) // 9个字段，每3个一段，共3段
+
+        // 检查每段 directSize
+        segment = tuple
+        val sizes = mutableListOf<Int>()
+        while (segment != null) {
+            sizes.add(segment.directSize)
+            segment = segment.getRest()
+        }
+        assertEquals(listOf(3, 3, 3), sizes)
+    }
 }

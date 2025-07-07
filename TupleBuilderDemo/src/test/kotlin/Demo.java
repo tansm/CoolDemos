@@ -25,6 +25,11 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
     }
 
     @Override
+    public void setRest(AbstractTuple value) {
+        rest = value;
+    }
+
+    @Override
     public boolean getHasRestField() {
         return true;
     }
