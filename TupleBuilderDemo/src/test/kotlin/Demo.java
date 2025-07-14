@@ -83,13 +83,13 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
             return;
         }
         switch (index) {
-            case 0: this.item0 = ((Integer)value).intValue(); break;
+            case 0: this.item0 = (Integer) value; break;
             case 1: this.item1 = value; break;
-            case 2: this.item2 = ((Boolean)value).booleanValue(); break;
-            case 3: this.item3 = ((Integer)value).intValue(); break;
+            case 2: this.item2 = (Boolean) value; break;
+            case 3: this.item3 = (Integer) value; break;
             case 4: this.item4 = value; break;
-            case 5: this.item5 = ((Boolean)value).booleanValue(); break;
-            case 6: this.item6 = ((Integer)value).intValue(); break;
+            case 5: this.item5 = (Boolean) value; break;
+            case 6: this.item6 = (Integer) value; break;
             default:
                 if (this.rest == null) {
                     throwIllegalStateException(index);
