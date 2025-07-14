@@ -43,16 +43,17 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
         if (index < 0) {
             return throwIndexOutOfBounds(index);
         }
-        switch (index) {
-            case 0, 3, 6: return int.class;
-            case 1, 4: return java.lang.Object.class;
-            case 2, 5: return boolean.class;
-            default:
+        return switch (index) {
+            case 0, 3, 6 -> int.class;
+            case 1, 4 -> java.lang.Object.class;
+            case 2, 5 -> boolean.class;
+            default -> {
                 if (this.rest == null) {
                     throwIllegalStateException(index);
                 }
-                return this.rest.getFieldType(index - 7);
-        }
+                yield this.rest.getFieldType(index - 7);
+            }
+        };
     }
 
     @Override
@@ -60,20 +61,21 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
         if (index < 0) {
             return throwIndexOutOfBounds(index);
         }
-        switch (index) {
-            case 0: return this.item0;
-            case 1: return this.item1;
-            case 2: return this.item2;
-            case 3: return this.item3;
-            case 4: return this.item4;
-            case 5: return this.item5;
-            case 6: return this.item6;
-            default:
+        return switch (index) {
+            case 0 -> this.item0;
+            case 1 -> this.item1;
+            case 2 -> this.item2;
+            case 3 -> this.item3;
+            case 4 -> this.item4;
+            case 5 -> this.item5;
+            case 6 -> this.item6;
+            default -> {
                 if (this.rest == null) {
-                    return throwIndexOutOfBounds(index);
+                    yield throwIndexOutOfBounds(index);
                 }
-                return this.rest.getItem(index - 7);
-        }
+                yield this.rest.getItem(index - 7);
+            }
+        };
     }
 
     @Override
@@ -100,21 +102,21 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
 
     @Override
     public int getInt(int index) {
-        switch (index) {
-            case 0: return this.item0;
-            case 3: return this.item3;
-            case 6: return this.item6;
-            default: return super.getInt(index);
-        }
+        return switch (index) {
+            case 0 -> this.item0;
+            case 3 -> this.item3;
+            case 6 -> this.item6;
+            default -> super.getInt(index);
+        };
     }
 
     @Override
     public boolean getBoolean(int index) {
-        switch (index) {
-            case 2: return this.item2;
-            case 5: return this.item5;
-            default: return super.getBoolean(index);
-        }
+        return switch (index) {
+            case 2 -> this.item2;
+            case 5 -> this.item5;
+            default -> super.getBoolean(index);
+        };
     }
 
     @Override
