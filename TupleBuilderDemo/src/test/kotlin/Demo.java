@@ -1,5 +1,7 @@
 
 import com.example.orm.AbstractTuple;
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.Class;
 
 // 这是一个最终生成的代码， 包含 int, object,bool 等字段类型，且包含 rest 字段。
@@ -35,6 +37,7 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
         return true;
     }
 
+    @NotNull
     @Override
     public Class<?> getFieldType(int index) {
         if (index < 0) {

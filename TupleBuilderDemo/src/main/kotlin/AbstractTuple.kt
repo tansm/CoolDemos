@@ -1,5 +1,7 @@
 package com.example.orm
 
+import org.jetbrains.annotations.NotNull
+
 abstract class AbstractTuple : Iterable<Any?> {
     // 获取指定索引的字段值 (Any? 用于所有类型，包括原始类型的装箱值)
     abstract fun getItem(index: Int): Any?
@@ -252,7 +254,7 @@ abstract class AbstractTuple : Iterable<Any?> {
     }
 
     // 获取指定索引字段的类型 (所有链条的总数)
-    abstract fun getFieldType(index: Int): Class<*>
+    @NotNull abstract fun getFieldType(index: Int): Class<*>
 
     //region ================== 辅助函数 =========================
     protected fun <R> throwIndexOutOfBounds(index: Int): R {
