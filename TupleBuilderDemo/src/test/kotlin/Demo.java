@@ -15,8 +15,6 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
     public int item6;
     public com.example.orm.AbstractTuple rest;
 
-    public Tuple_IOBIOBIR() {}
-
     @Override
     public int getDirectSize() {
         return 7;
