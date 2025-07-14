@@ -44,13 +44,9 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
             return throwIndexOutOfBounds(index);
         }
         switch (index) {
-            case 0: return int.class;
-            case 1: return java.lang.Object.class;
-            case 2: return boolean.class;
-            case 3: return int.class;
-            case 4: return java.lang.Object.class;
-            case 5: return boolean.class;
-            case 6: return int.class;
+            case 0, 3, 6: return int.class;
+            case 1, 4: return java.lang.Object.class;
+            case 2, 5: return boolean.class;
             default:
                 if (this.rest == null) {
                     throwIllegalStateException(index);
