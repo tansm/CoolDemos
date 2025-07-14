@@ -83,13 +83,13 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
             return;
         }
         switch (index) {
-            case 0: this.item0 = ((Integer)value).intValue(); return;
-            case 1: this.item1 = value; return;
-            case 2: this.item2 = ((Boolean)value).booleanValue(); return;
-            case 3: this.item3 = ((Integer)value).intValue(); return;
-            case 4: this.item4 = value; return;
-            case 5: this.item5 = ((Boolean)value).booleanValue(); return;
-            case 6: this.item6 = ((Integer)value).intValue(); return;
+            case 0: this.item0 = ((Integer)value).intValue(); break;
+            case 1: this.item1 = value; break;
+            case 2: this.item2 = ((Boolean)value).booleanValue(); break;
+            case 3: this.item3 = ((Integer)value).intValue(); break;
+            case 4: this.item4 = value; break;
+            case 5: this.item5 = ((Boolean)value).booleanValue(); break;
+            case 6: this.item6 = ((Integer)value).intValue(); break;
             default:
                 if (this.rest == null) {
                     throwIllegalStateException(index);
@@ -120,9 +120,9 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
     @Override
     public void setInt(int index, int value) {
         switch (index) {
-            case 0: this.item0 = value; return;
-            case 3: this.item3 = value; return;
-            case 6: this.item6 = value; return;
+            case 0: this.item0 = value; break;
+            case 3: this.item3 = value; break;
+            case 6: this.item6 = value; break;
             default: super.setInt(index, value);
         }
     }
@@ -130,8 +130,8 @@ final class Tuple_IOBIOBIR extends AbstractTuple {
     @Override
     public void setBoolean(int index, boolean value) {
         switch (index) {
-            case 2: this.item2 = value; return;
-            case 5: this.item5 = value; return;
+            case 2: this.item2 = value; break;
+            case 5: this.item5 = value; break;
             default: super.setBoolean(index, value);
         }
     }
