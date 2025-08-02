@@ -1,5 +1,6 @@
 package org.example
 
+import java.math.BigDecimal
 import java.nio.ByteBuffer
 
 //region ================= fields =======================
@@ -86,13 +87,121 @@ internal class DoubleField : Field() {
 
 //endregion
 
+//region =================== SparseObjectMap ========================
+
+/**
+ * 稀疏属性索引到对象的映射，内部用 ShortArray 和 Array<Any?>，索引有序，查找用二分法。
+ */
+@OptIn(ExperimentalUnsignedTypes::class)
+class SparseObjectMap(initialCapacity: Int = 0) {
+    private var keys = UShortArray(initialCapacity)
+    private var values = arrayOfNulls<Any>(initialCapacity)
+    private var _size = 0
+
+    val size: Int get() = _size
+
+    operator fun get(key: Int): Any? {
+        val k = checkKey(key)
+        val idx = hybridSearch(k)
+        return if (idx >= 0) values[idx] else null
+    }
+
+    operator fun set(key: Int, value: Any?) {
+        val k = checkKey(key)
+        if (value == null) {
+            remove(key)
+            return
+        }
+        val idx = hybridSearch(k)
+        if (idx >= 0) {
+            values[idx] = value
+        } else {
+            insertAt(-(idx + 1), k, value)
+        }
+    }
+
+    fun remove(key: Int) {
+        val k = checkKey(key)
+        val idx = hybridSearch(k)
+        if (idx >= 0) removeAt(idx)
+    }
+
+    private fun checkKey(key: Int): UShort {
+        require(key in 0..0xFFFF) { "Key must be in 0..65535, but was $key" }
+        return key.toUShort()
+    }
+
+    private fun hybridSearch(key: UShort): Int {
+        if (_size == 0) return -1
+        if ((_size > 0) && (keys[_size - 1] < key)) {
+            return -_size - 1
+        }
+        var low = 0
+        var high = _size - 1
+        while (low + 32 <= high) {
+            val mid = (low + high) ushr 1
+            val midVal = keys[mid]
+            when {
+                midVal < key -> low = mid + 1
+                midVal > key -> high = mid - 1
+                else -> return mid
+            }
+        }
+        var x = low
+        while (x <= high) {
+            val v = keys[x]
+            if (v >= key) {
+                if (v == key) return x
+                break
+            }
+            x++
+        }
+        return -(x + 1)
+    }
+
+    private fun insertAt(index: Int, key: UShort, value: Any?) {
+        ensureCapacity(_size + 1)
+        if (index < _size) {
+            keys.copyInto(keys, index + 1, index, _size)
+            values.copyInto(values, index + 1, index, _size)
+        }
+        keys[index] = key
+        values[index] = value
+        _size++
+    }
+
+    private fun removeAt(index: Int) {
+        if (index < _size - 1) {
+            keys.copyInto(keys, index, index + 1, _size)
+            values.copyInto(values, index, index + 1, _size)
+        }
+        _size--
+        values[_size] = null
+    }
+
+    private fun ensureCapacity(cap: Int) {
+        if (cap > keys.size) {
+            val newCap = if (keys.isEmpty()) 2 else keys.size * 2
+            keys = keys.copyOf(newCap)
+            values = values.copyOf(newCap)
+        }
+    }
+}
+//endregion
+
 //region =================== PropertyAccessor ========================
 internal abstract class PropertyAccessor {
     abstract val nullable: Boolean
     abstract val defaultValue : Any?
     abstract fun getFields(): List<Field>
     abstract fun get(buffer: ByteBuffer): Any?
+    open fun get(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap) : Any?{
+        return get(buffer)
+    }
     abstract fun set(buffer: ByteBuffer, value: Any?)
+    open fun set(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap, value: Any?){
+        set(buffer, value)
+    }
 }
 
 /**
@@ -428,6 +537,59 @@ internal class DoublePropertyAccessor(override val nullable: Boolean, defaultVal
     }
 }
 
+internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : PropertyAccessor() {
+    private val _intCompactField = LongField()
+    private val _scaleField = ByteField()
+    private val _definedField: BooleanField? = if (nullable) BooleanField() else null
+
+    override fun getFields() = listOfNotNull(_intCompactField, _scaleField, _definedField)
+
+    // 为降低复杂度，BigDecimal 不支持自定义的缺省值。 nullable = false 时，intCompact 和 scale 正好都是 0.
+    override val defaultValue: Any? get() = if (nullable) null else BigDecimal.ZERO
+
+    override fun get(buffer: ByteBuffer): Any? {
+        throw RuntimeException("not support")
+    }
+
+    override fun get(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap): Any? {
+        if (_definedField?.get(buffer) == false) return null
+
+        val intCompact = _intCompactField.get(buffer)
+        return if (intCompact == INFLATED) {
+            val obj: BigDecimal? = objectMap[propertyIndex] as BigDecimal?
+            obj
+        } else {
+            // 从数据中恢复, scale 可以是负数也可以是正数
+            BigDecimal.valueOf(intCompact, _scaleField.get(buffer).toInt())
+        }
+    }
+
+    override fun set(buffer: ByteBuffer, value: Any?) {
+        throw RuntimeException("not support")
+    }
+
+    override fun set(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap, value: Any?) {
+        TODO("Not yet implemented")
+    }
+
+    fun getBigDecimal(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap): BigDecimal {
+        if (_definedField?.get(buffer) == false) return BigDecimal.ZERO
+
+        val intCompact = _intCompactField.get(buffer)
+        return if (intCompact == INFLATED) {
+            // 从 objectMap 中获取值，如果获取的值是 null, 返回 BigDecimal.ZERO
+            val obj: BigDecimal? = objectMap[propertyIndex] as BigDecimal?
+            obj ?: BigDecimal.ZERO
+        } else {
+            // 从数据中恢复, scale 可以是负数也可以是正数
+            BigDecimal.valueOf(intCompact, _scaleField.get(buffer).toInt())
+        }
+    }
+
+    private companion object {
+        private const val INFLATED = Long.MIN_VALUE
+    }
+}
 //endregion
 
 //region =================== LayoutManager ========================
