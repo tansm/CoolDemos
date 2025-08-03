@@ -1,9 +1,17 @@
 package org.example
 
+import sun.misc.Unsafe
 import java.math.BigDecimal
 import java.nio.ByteBuffer
 
 //region ================= fields =======================
+/**
+ * 描述了字段和类型两个信息。
+ *
+ * 从理论上来说，下面的设计更标准：
+ * ```class Field<T : DataType>(val dataType: T)```
+ * 但实际实现了一个版本，发现增加了不必要的复杂度，最终还是简单其间。
+ */
 internal abstract class Field {
     private var _offset: Int = -1  // 新的 offset 变量，代替 byteOffset 和 bitIndex
 
@@ -187,20 +195,31 @@ class SparseObjectMap(initialCapacity: Int = 0) {
         }
     }
 }
+
+internal class ByteStorage(byteSize : Int) {
+    val buffer: ByteBuffer = ByteBuffer.allocate(byteSize)
+    val objectMap = SparseObjectMap()
+}
 //endregion
 
 //region =================== PropertyAccessor ========================
 internal abstract class PropertyAccessor {
+    private var _propertyIndex : Int = -1
+    val propertyIndex: Int get() = _propertyIndex
+    fun resetPropertyIndex(index: Int){
+        _propertyIndex = index
+    }
+
     abstract val nullable: Boolean
     abstract val defaultValue : Any?
     abstract fun getFields(): List<Field>
     abstract fun get(buffer: ByteBuffer): Any?
-    open fun get(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap) : Any?{
-        return get(buffer)
+    open fun get(storage: ByteStorage) : Any?{
+        return get(storage.buffer)
     }
     abstract fun set(buffer: ByteBuffer, value: Any?)
-    open fun set(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap, value: Any?){
-        set(buffer, value)
+    open fun set(storage: ByteStorage, value: Any?){
+        set(storage.buffer, value)
     }
 }
 
@@ -545,49 +564,83 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
     override fun getFields() = listOfNotNull(_intCompactField, _scaleField, _definedField)
 
     // 为降低复杂度，BigDecimal 不支持自定义的缺省值。 nullable = false 时，intCompact 和 scale 正好都是 0.
-    override val defaultValue: Any? get() = if (nullable) null else BigDecimal.ZERO
+    override val defaultValue: Any? get() = defaultBigDecimalValue
+    private val defaultBigDecimalValue : BigDecimal? get() = if (nullable) null else BigDecimal.ZERO
 
     override fun get(buffer: ByteBuffer): Any? {
         throw RuntimeException("not support")
     }
 
-    override fun get(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap): Any? {
-        if (_definedField?.get(buffer) == false) return null
-
-        val intCompact = _intCompactField.get(buffer)
-        return if (intCompact == INFLATED) {
-            val obj: BigDecimal? = objectMap[propertyIndex] as BigDecimal?
-            obj
-        } else {
-            // 从数据中恢复, scale 可以是负数也可以是正数
-            BigDecimal.valueOf(intCompact, _scaleField.get(buffer).toInt())
-        }
+    override fun get(storage: ByteStorage): Any? {
+        return getBigDecimal(storage)
     }
 
     override fun set(buffer: ByteBuffer, value: Any?) {
         throw RuntimeException("not support")
     }
 
-    override fun set(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap, value: Any?) {
-        TODO("Not yet implemented")
+    override fun set(storage: ByteStorage, value: Any?) {
+        setBigDecimal(storage, value as BigDecimal?)
     }
 
-    fun getBigDecimal(propertyIndex: Int, buffer: ByteBuffer, objectMap: SparseObjectMap): BigDecimal {
-        if (_definedField?.get(buffer) == false) return BigDecimal.ZERO
+    fun getBigDecimal(storage: ByteStorage): BigDecimal? {
+        val buffer = storage.buffer
+        val objectMap = storage.objectMap
+
+        if (_definedField?.get(buffer) == false) return defaultBigDecimalValue
 
         val intCompact = _intCompactField.get(buffer)
         return if (intCompact == INFLATED) {
-            // 从 objectMap 中获取值，如果获取的值是 null, 返回 BigDecimal.ZERO
+            // 从 objectMap 中获取值，如果获取的值是 null, 返回 默认值
             val obj: BigDecimal? = objectMap[propertyIndex] as BigDecimal?
-            obj ?: BigDecimal.ZERO
+            obj ?: defaultBigDecimalValue
         } else {
             // 从数据中恢复, scale 可以是负数也可以是正数
             BigDecimal.valueOf(intCompact, _scaleField.get(buffer).toInt())
         }
     }
 
+    fun setBigDecimal(storage: ByteStorage, value: BigDecimal?) {
+        val buffer = storage.buffer
+        val objectMap = storage.objectMap
+
+        _definedField?.set(buffer, value != null)
+        if (value == null) {
+            _intCompactField.set(buffer, 0L)
+            _scaleField.set(buffer, 0)
+            objectMap[propertyIndex] = null
+            return
+        }
+
+        val intCompact =  UNSAFE.getLong(value, INT_COMPACT_OFFSET);
+        val scale = value.scale()
+
+        if (intCompact != INFLATED && (scale in Byte.MIN_VALUE .. Byte.MAX_VALUE)) {
+            _intCompactField.set(buffer, intCompact)
+            _scaleField.set(buffer, scale.toByte())
+            objectMap[propertyIndex] = null
+        } else {
+            _intCompactField.set(buffer, INFLATED)
+            _scaleField.set(buffer, 0)
+            objectMap[propertyIndex] = value
+        }
+    }
+
     private companion object {
+        private val UNSAFE: Unsafe
+        private val INT_COMPACT_OFFSET: Long
         private const val INFLATED = Long.MIN_VALUE
+
+        init {
+            try {
+                val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
+                unsafeField.setAccessible(true)
+                UNSAFE = unsafeField.get(null) as Unsafe
+                INT_COMPACT_OFFSET = UNSAFE.objectFieldOffset(BigDecimal::class.java.getDeclaredField("intCompact"))
+            } catch (e: java.lang.Exception) {
+                throw java.lang.RuntimeException("Failed to initialize Unsafe fields", e)
+            }
+        }
     }
 }
 //endregion
@@ -617,6 +670,6 @@ internal object LayoutManager {
         }
     }
 
-    private fun alignUp(offset: Int, align: Int): Int = (offset + align - 1) and (align.inv())
+    private fun alignUp(offset: Int, align: Int): Int = (offset + align - 1) and (-align)
 }
 //endregion

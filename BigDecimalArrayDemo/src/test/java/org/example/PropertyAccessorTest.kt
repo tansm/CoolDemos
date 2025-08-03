@@ -4,6 +4,7 @@ import org.junit.Assert.*
 import java.nio.ByteBuffer
 import org.junit.Before
 import org.junit.Test
+import java.math.BigDecimal
 
 class PropertyAccessorTest {
 
@@ -793,5 +794,73 @@ class PropertyAccessorTest {
     @Test(expected = IllegalArgumentException::class)
     fun testDoublePropertyAccessorNullableCtorError() {
         DoublePropertyAccessor(nullable = true, defaultValue = 123.5)
+    }
+
+    @Test
+    fun testBigDecimalPropertyAccessorNullable() {
+        val accessor = BigDecimalPropertyAccessor(nullable = true)
+        val storage = ByteStorage(32)
+        val fields = accessor.getFields()
+        LayoutManager.assignOffsets(fields)
+        accessor.resetPropertyIndex(0)
+
+        // 默认值
+        assertNull(accessor.defaultValue)
+        assertNull(accessor.get(storage))
+
+        // 设置 null
+        accessor.set(storage, null)
+        assertNull(accessor.get(storage))
+
+        // 设置小数值
+        val small = BigDecimal("123.45")
+        accessor.set(storage, small)
+        assertEquals(small, accessor.get(storage))
+
+        // 设置大数值（超出 long）
+        val big = BigDecimal("123456789012345678901234567890.123")
+        accessor.set(storage, big)
+        assertEquals(big, accessor.get(storage))
+
+        // 设置 scale 超出 byte 范围
+        val largeScale = BigDecimal.valueOf(123, 128)
+        accessor.set(storage, largeScale)
+        assertEquals(largeScale, accessor.get(storage))
+
+        // 再次设置 null
+        accessor.set(storage, null)
+        assertNull(accessor.get(storage))
+    }
+
+    @Test
+    fun testBigDecimalPropertyAccessorNonNullable() {
+        val accessor = BigDecimalPropertyAccessor(nullable = false)
+        val storage = ByteStorage(32)
+        val fields = accessor.getFields()
+        LayoutManager.assignOffsets(fields)
+        accessor.resetPropertyIndex(1)
+
+        // 默认值
+        assertEquals(BigDecimal.ZERO, accessor.defaultValue)
+        assertEquals(BigDecimal.ZERO, accessor.get(storage))
+
+        // 设置 null，等价于 reset
+        accessor.set(storage, null)
+        assertEquals(BigDecimal.ZERO, accessor.get(storage))
+
+        // 设置小数值
+        val small = BigDecimal("123.45")
+        accessor.set(storage, small)
+        assertEquals(small, accessor.get(storage))
+
+        // 设置大数值（超出 long）
+        val big = BigDecimal("123456789012345678901234567890.123")
+        accessor.set(storage, big)
+        assertEquals(big, accessor.get(storage))
+
+        // 设置 scale 超出 byte 范围
+        val largeScale = BigDecimal.valueOf(123, 128)
+        accessor.set(storage, largeScale)
+        assertEquals(largeScale, accessor.get(storage))
     }
 }
