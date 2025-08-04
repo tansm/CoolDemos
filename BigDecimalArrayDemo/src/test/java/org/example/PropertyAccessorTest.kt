@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
+import java.time.*
 
 class PropertyAccessorTest {
 
@@ -798,11 +799,9 @@ class PropertyAccessorTest {
 
     @Test
     fun testBigDecimalPropertyAccessorNullable() {
-        val accessor = BigDecimalPropertyAccessor(nullable = true)
-        val storage = ByteStorage(32)
-        val fields = accessor.getFields()
-        LayoutManager.assignOffsets(fields)
-        accessor.resetPropertyIndex(0)
+        val dt = DynamicObjectType()
+        val accessor = dt.register(BigDecimalPropertyAccessor(nullable = true))
+        val storage = dt.createInstance()
 
         // 默认值
         assertNull(accessor.defaultValue)
@@ -827,6 +826,10 @@ class PropertyAccessorTest {
         accessor.set(storage, largeScale)
         assertEquals(largeScale, accessor.get(storage))
 
+        val minLong = BigDecimal.valueOf(Long.MIN_VALUE, 0)
+        accessor.set(storage, minLong)
+        assertEquals(minLong, accessor.getBigDecimal(storage))
+
         // 再次设置 null
         accessor.set(storage, null)
         assertNull(accessor.get(storage))
@@ -834,11 +837,9 @@ class PropertyAccessorTest {
 
     @Test
     fun testBigDecimalPropertyAccessorNonNullable() {
-        val accessor = BigDecimalPropertyAccessor(nullable = false)
-        val storage = ByteStorage(32)
-        val fields = accessor.getFields()
-        LayoutManager.assignOffsets(fields)
-        accessor.resetPropertyIndex(1)
+        val dt = DynamicObjectType()
+        val accessor = dt.register(BigDecimalPropertyAccessor(nullable = false))
+        val storage = dt.createInstance()
 
         // 默认值
         assertEquals(BigDecimal.ZERO, accessor.defaultValue)
@@ -862,5 +863,326 @@ class PropertyAccessorTest {
         val largeScale = BigDecimal.valueOf(123, 128)
         accessor.set(storage, largeScale)
         assertEquals(largeScale, accessor.get(storage))
+    }
+
+    
+    @Test
+    fun testUUIDPropertyAccessorNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(UUIDPropertyAccessor(nullable = true))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertNull(accessor.defaultValue)
+        assertNull(accessor.getUUID(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置 null
+        accessor.setUUID(buffer, null)
+        assertNull(accessor.getUUID(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置普通 UUID
+        val uuid = java.util.UUID.randomUUID()
+        accessor.setUUID(buffer, uuid)
+        assertEquals(uuid, accessor.getUUID(buffer))
+        assertEquals(uuid, accessor.get(buffer))
+
+        // 设置全 0 UUID
+        val zeroUUID = java.util.UUID(0L, 0L)
+        accessor.set(buffer, zeroUUID)
+        // nullable 时全 0 UUID 也应返回 zeroUUID
+        assertEquals(zeroUUID, accessor.getUUID(buffer))
+        assertEquals(zeroUUID, accessor.get(buffer))
+        assertSame(accessor.getUUID(buffer), accessor.get(buffer))
+
+        val u2 = java.util.UUID(0L, 1L)
+        accessor.setUUID(buffer, u2)
+        assertEquals(u2, accessor.getUUID(buffer))
+        assertEquals(u2, accessor.get(buffer))
+
+        // 再次设置 null
+        accessor.setUUID(buffer, null)
+        assertNull(accessor.getUUID(buffer))
+        assertNull(accessor.get(buffer))
+    }
+
+    @Test
+    fun testUUIDPropertyAccessorNonNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(UUIDPropertyAccessor(nullable = false))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        val zeroUUID = java.util.UUID(0L, 0L)
+        assertEquals(zeroUUID, accessor.defaultValue)
+        assertEquals(zeroUUID, accessor.getUUID(buffer))
+        assertEquals(zeroUUID, accessor.get(buffer))
+
+        // 设置 null，等价于 reset
+        accessor.setUUID(buffer, null)
+        assertEquals(zeroUUID, accessor.getUUID(buffer))
+        assertEquals(zeroUUID, accessor.get(buffer))
+
+        // 设置普通 UUID
+        val uuid = java.util.UUID.randomUUID()
+        accessor.setUUID(buffer, uuid)
+        assertEquals(uuid, accessor.getUUID(buffer))
+        assertEquals(uuid, accessor.get(buffer))
+
+        // 设置全 0 UUID
+        accessor.setUUID(buffer, zeroUUID)
+        assertEquals(zeroUUID, accessor.getUUID(buffer))
+        assertEquals(zeroUUID, accessor.get(buffer))
+        assertSame(accessor.getUUID(buffer), accessor.get(buffer))
+    }
+
+    @Test
+    fun testLocalDatePropertyAccessorNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(LocalDatePropertyAccessor(nullable = true))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertNull(accessor.defaultValue)
+        assertNull(accessor.getLocalDate(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置 null
+        accessor.setLocalDate(buffer, null)
+        assertNull(accessor.getLocalDate(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置普通日期
+        val date = LocalDate.of(2023, 8, 4)
+        accessor.setLocalDate(buffer, date)
+        assertEquals(date, accessor.getLocalDate(buffer))
+        assertEquals(date, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.set(buffer, LocalDatePropertyAccessor.EMPTY)
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.getLocalDate(buffer))
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 再次设置 null
+        accessor.setLocalDate(buffer, null)
+        assertNull(accessor.getLocalDate(buffer))
+        assertNull(accessor.get(buffer))
+    }
+
+    @Test
+    fun testLocalDatePropertyAccessorNonNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(LocalDatePropertyAccessor(nullable = false))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.defaultValue)
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.getLocalDate(buffer))
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置 null，等价于 reset
+        accessor.setLocalDate(buffer, null)
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.getLocalDate(buffer))
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置普通日期
+        val date = LocalDate.of(2023, 8, 4)
+        accessor.setLocalDate(buffer, date)
+        assertEquals(date, accessor.getLocalDate(buffer))
+        assertEquals(date, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.setLocalDate(buffer, LocalDatePropertyAccessor.EMPTY)
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.getLocalDate(buffer))
+        assertEquals(LocalDatePropertyAccessor.EMPTY, accessor.get(buffer))
+    }
+
+    @Test
+    fun testLocalTimePropertyAccessorNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(LocalTimePropertyAccessor(nullable = true))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertNull(accessor.defaultValue)
+        assertNull(accessor.getLocalTime(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置 null
+        accessor.setLocalTime(buffer, null)
+        assertNull(accessor.getLocalTime(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置普通时间
+        val time = LocalTime.of(12, 34, 56, 789000000)
+        accessor.setLocalTime(buffer, time)
+        assertEquals(time, accessor.getLocalTime(buffer))
+        assertEquals(time, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.set(buffer, LocalTimePropertyAccessor.EMPTY)
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.getLocalTime(buffer))
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 再次设置 null
+        accessor.setLocalTime(buffer, null)
+        assertNull(accessor.getLocalTime(buffer))
+        assertNull(accessor.get(buffer))
+    }
+
+    @Test
+    fun testLocalTimePropertyAccessorNonNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(LocalTimePropertyAccessor(nullable = false))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.defaultValue)
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.getLocalTime(buffer))
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置 null，等价于 reset
+        accessor.setLocalTime(buffer, null)
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.getLocalTime(buffer))
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置普通时间
+        val time = LocalTime.of(12, 34, 56, 789000000)
+        accessor.setLocalTime(buffer, time)
+        assertEquals(time, accessor.getLocalTime(buffer))
+        assertEquals(time, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.setLocalTime(buffer, LocalTimePropertyAccessor.EMPTY)
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.getLocalTime(buffer))
+        assertEquals(LocalTimePropertyAccessor.EMPTY, accessor.get(buffer))
+    }
+
+    @Test
+    fun testLocalDateTimePropertyAccessorNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(LocalDateTimePropertyAccessor(nullable = true))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertNull(accessor.defaultValue)
+        assertNull(accessor.getLocalDateTime(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置 null
+        accessor.setLocalDateTime(buffer, null)
+        assertNull(accessor.getLocalDateTime(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置普通日期时间
+        val dtValue = LocalDateTime.of(2023, 8, 4, 12, 34, 56, 789000000)
+        accessor.setLocalDateTime(buffer, dtValue)
+        assertEquals(dtValue, accessor.getLocalDateTime(buffer))
+        assertEquals(dtValue, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.set(buffer, LocalDateTimePropertyAccessor.EMPTY)
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.getLocalDateTime(buffer))
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        val dtValue2 = LocalDateTime.ofEpochSecond(0L, 1, ZoneOffset.UTC)
+        accessor.set(buffer, dtValue2)
+        assertEquals(dtValue2, accessor.getLocalDateTime(buffer))
+        assertEquals(dtValue2, accessor.get(buffer))
+
+        // 再次设置 null
+        accessor.setLocalDateTime(buffer, null)
+        assertNull(accessor.getLocalDateTime(buffer))
+        assertNull(accessor.get(buffer))
+    }
+
+    @Test
+    fun testLocalDateTimePropertyAccessorNonNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(LocalDateTimePropertyAccessor(nullable = false))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.defaultValue)
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.getLocalDateTime(buffer))
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置 null，等价于 reset
+        accessor.setLocalDateTime(buffer, null)
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.getLocalDateTime(buffer))
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置普通日期时间
+        val dtValue = LocalDateTime.of(2023, 8, 4, 12, 34, 56, 789000000)
+        accessor.setLocalDateTime(buffer, dtValue)
+        assertEquals(dtValue, accessor.getLocalDateTime(buffer))
+        assertEquals(dtValue, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.setLocalDateTime(buffer, LocalDateTimePropertyAccessor.EMPTY)
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.getLocalDateTime(buffer))
+        assertEquals(LocalDateTimePropertyAccessor.EMPTY, accessor.get(buffer))
+    }
+
+    @Test
+    fun testInstantPropertyAccessorNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(InstantPropertyAccessor(nullable = true))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertNull(accessor.defaultValue)
+        assertNull(accessor.getInstant(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置 null
+        accessor.setInstant(buffer, null)
+        assertNull(accessor.getInstant(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置普通 Instant
+        val instant = Instant.parse("2023-08-04T12:34:56.789Z")
+        accessor.setInstant(buffer, instant)
+        assertEquals(instant, accessor.getInstant(buffer))
+        assertEquals(instant, accessor.get(buffer))
+
+        // 设置 EPOCH
+        accessor.set(buffer, Instant.EPOCH)
+        assertEquals(Instant.EPOCH, accessor.getInstant(buffer))
+        assertEquals(Instant.EPOCH, accessor.get(buffer))
+
+        // 再次设置 null
+        accessor.setInstant(buffer, null)
+        assertNull(accessor.getInstant(buffer))
+        assertNull(accessor.get(buffer))
+    }
+
+    @Test
+    fun testInstantPropertyAccessorNonNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(InstantPropertyAccessor(nullable = false))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertEquals(Instant.EPOCH, accessor.defaultValue)
+        assertEquals(Instant.EPOCH, accessor.getInstant(buffer))
+        assertEquals(Instant.EPOCH, accessor.get(buffer))
+
+        // 设置 null，等价于 reset
+        accessor.setInstant(buffer, null)
+        assertEquals(Instant.EPOCH, accessor.getInstant(buffer))
+        assertEquals(Instant.EPOCH, accessor.get(buffer))
+
+        // 设置普通 Instant
+        val instant = Instant.parse("2023-08-04T12:34:56.789Z")
+        accessor.setInstant(buffer, instant)
+        assertEquals(instant, accessor.getInstant(buffer))
+        assertEquals(instant, accessor.get(buffer))
+
+        // 设置 EPOCH
+        accessor.setInstant(buffer, Instant.EPOCH)
+        assertEquals(Instant.EPOCH, accessor.getInstant(buffer))
+        assertEquals(Instant.EPOCH, accessor.get(buffer))
     }
 }
