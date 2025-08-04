@@ -3,6 +3,12 @@ package org.example
 import sun.misc.Unsafe
 import java.math.BigDecimal
 import java.nio.ByteBuffer
+import java.util.UUID
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
 
 //region ================= fields =======================
 /**
@@ -587,11 +593,13 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
         val buffer = storage.buffer
         val objectMap = storage.objectMap
 
-        if (_definedField?.get(buffer) == false) return defaultBigDecimalValue
+        if (_definedField?.get(buffer) == false) return null
 
         val intCompact = _intCompactField.get(buffer)
         return if (intCompact == INFLATED) {
             // 从 objectMap 中获取值，如果获取的值是 null, 返回 默认值
+            // 注意这里和 UUID 的处理方式不同，UUID 一定能用两个 long 存储，但 BigDecimal 可能数值过大，还是放到 objectMap
+            // 这里 obj 一定不会为 null(程序实现为了简单返回了 defaultBigDecimalValue )，而 UUID 简单的返回 EMPTY 即可。
             val obj: BigDecimal? = objectMap[propertyIndex] as BigDecimal?
             obj ?: defaultBigDecimalValue
         } else {
@@ -612,7 +620,7 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
             return
         }
 
-        val intCompact =  UNSAFE.getLong(value, INT_COMPACT_OFFSET);
+        val intCompact =  UNSAFE.getLong(value, INT_COMPACT_OFFSET)
         val scale = value.scale()
 
         if (intCompact != INFLATED && (scale in Byte.MIN_VALUE .. Byte.MAX_VALUE)) {
@@ -640,6 +648,170 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
             } catch (e: java.lang.Exception) {
                 throw java.lang.RuntimeException("Failed to initialize Unsafe fields", e)
             }
+        }
+    }
+}
+
+internal class UUIDPropertyAccessor(override val nullable: Boolean) : PropertyAccessor() {
+    private val _mostSigBitsField = LongField()
+    private val _leastSigBitsField = LongField()
+    private val _definedField: BooleanField? = if (nullable) BooleanField() else null
+
+    override fun getFields() = listOfNotNull(_mostSigBitsField, _leastSigBitsField, _definedField)
+
+    override val defaultValue: Any? get() = if (nullable) null else EMPTY
+
+    override fun get(buffer: ByteBuffer): Any? {
+        return getUUID(buffer)
+    }
+
+    override fun set(buffer: ByteBuffer, value: Any?) {
+        setUUID(buffer, value as UUID?)
+    }
+
+    fun getUUID(buffer: ByteBuffer): UUID? {
+        if (_definedField?.get(buffer) == false) return null
+        val most = _mostSigBitsField.get(buffer)
+        val least = _leastSigBitsField.get(buffer)
+        return if (most == 0L && least == 0L) EMPTY else UUID(most, least)
+    }
+
+    fun setUUID(buffer: ByteBuffer, value: UUID?) {
+        _definedField?.set(buffer, value != null)
+        if (value == null) {
+            _mostSigBitsField.set(buffer, 0L)
+            _leastSigBitsField.set(buffer, 0L)
+        } else {
+            _mostSigBitsField.set(buffer, value.mostSignificantBits)
+            _leastSigBitsField.set(buffer, value.leastSignificantBits)
+        }
+    }
+
+    private companion object {
+        val EMPTY = UUID(0L, 0L)
+    }
+}
+
+internal class LocalDatePropertyAccessor(override val nullable: Boolean) : PropertyAccessor() {
+    private val _epochDayField = LongField()
+    private val _definedField: BooleanField? = if (nullable) BooleanField() else null
+
+    override fun getFields() = listOfNotNull(_epochDayField, _definedField)
+    override val defaultValue: Any? get() = if (nullable) null else EMPTY
+
+    override fun get(buffer: ByteBuffer): Any? = getLocalDate(buffer)
+    override fun set(buffer: ByteBuffer, value: Any?) = setLocalDate(buffer, value as LocalDate?)
+
+    fun getLocalDate(buffer: ByteBuffer): LocalDate? {
+        if (_definedField?.get(buffer) == false) return null
+        val epochDay = _epochDayField.get(buffer)
+        return if (epochDay == 0L) EMPTY else LocalDate.ofEpochDay(epochDay)
+    }
+
+    fun setLocalDate(buffer: ByteBuffer, value: LocalDate?) {
+        _definedField?.set(buffer, value != null)
+        if (value == null) {
+            _epochDayField.set(buffer, 0L)
+        } else {
+            _epochDayField.set(buffer, value.toEpochDay())
+        }
+    }
+
+    companion object {
+        val EMPTY: LocalDate = LocalDate.ofEpochDay(0)
+    }
+}
+
+internal class LocalTimePropertyAccessor(override val nullable: Boolean) : PropertyAccessor() {
+    private val _nanoOfDayField = LongField()
+    private val _definedField: BooleanField? = if (nullable) BooleanField() else null
+
+    override fun getFields() = listOfNotNull(_nanoOfDayField, _definedField)
+    override val defaultValue: Any? get() = if (nullable) null else EMPTY
+
+    override fun get(buffer: ByteBuffer): Any? = getLocalTime(buffer)
+    override fun set(buffer: ByteBuffer, value: Any?) = setLocalTime(buffer, value as LocalTime?)
+
+    fun getLocalTime(buffer: ByteBuffer): LocalTime? {
+        if (_definedField?.get(buffer) == false) return null
+        val nanoOfDay = _nanoOfDayField.get(buffer)
+        return if (nanoOfDay == 0L) EMPTY else LocalTime.ofNanoOfDay(nanoOfDay)
+    }
+
+    fun setLocalTime(buffer: ByteBuffer, value: LocalTime?) {
+        _definedField?.set(buffer, value != null)
+        if (value == null) {
+            _nanoOfDayField.set(buffer, 0L)
+        } else {
+            _nanoOfDayField.set(buffer, value.toNanoOfDay())
+        }
+    }
+
+    companion object {
+        val EMPTY: LocalTime = LocalTime.ofNanoOfDay(0)
+    }
+}
+
+internal class LocalDateTimePropertyAccessor(override val nullable: Boolean) : PropertyAccessor() {
+    private val _epochSecondField = LongField()
+    private val _nanoField = IntField()
+    private val _definedField: BooleanField? = if (nullable) BooleanField() else null
+
+    override fun getFields() = listOfNotNull(_epochSecondField, _nanoField, _definedField)
+    override val defaultValue: Any? get() = if (nullable) null else EMPTY
+
+    override fun get(buffer: ByteBuffer): Any? = getLocalDateTime(buffer)
+    override fun set(buffer: ByteBuffer, value: Any?) = setLocalDateTime(buffer, value as LocalDateTime?)
+
+    fun getLocalDateTime(buffer: ByteBuffer): LocalDateTime? {
+        if (_definedField?.get(buffer) == false) return null
+        val epochSecond = _epochSecondField.get(buffer)
+        val nano = _nanoField.get(buffer)
+        return if (epochSecond == 0L && nano == 0) EMPTY else LocalDateTime.ofEpochSecond(epochSecond, nano, ZoneOffset.UTC)
+    }
+
+    fun setLocalDateTime(buffer: ByteBuffer, value: LocalDateTime?) {
+        _definedField?.set(buffer, value != null)
+        if (value == null) {
+            _epochSecondField.set(buffer, 0L)
+            _nanoField.set(buffer, 0)
+        } else {
+            _epochSecondField.set(buffer, value.toEpochSecond(ZoneOffset.UTC))
+            _nanoField.set(buffer, value.nano)
+        }
+    }
+
+    companion object {
+        val EMPTY: LocalDateTime = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)
+    }
+}
+
+internal class InstantPropertyAccessor(override val nullable: Boolean) : PropertyAccessor() {
+    private val _epochSecondField = LongField()
+    private val _nanoField = IntField()
+    private val _definedField: BooleanField? = if (nullable) BooleanField() else null
+
+    override fun getFields() = listOfNotNull(_epochSecondField, _nanoField, _definedField)
+    override val defaultValue: Any? get() = if (nullable) null else Instant.EPOCH
+
+    override fun get(buffer: ByteBuffer): Any? = getInstant(buffer)
+    override fun set(buffer: ByteBuffer, value: Any?) = setInstant(buffer, value as Instant?)
+
+    fun getInstant(buffer: ByteBuffer): Instant? {
+        if (_definedField?.get(buffer) == false) return null
+        val epochSecond = _epochSecondField.get(buffer)
+        val nano = _nanoField.get(buffer)
+        return if (epochSecond == 0L && nano == 0) Instant.EPOCH else Instant.ofEpochSecond(epochSecond, nano.toLong())
+    }
+
+    fun setInstant(buffer: ByteBuffer, value: Instant?) {
+        _definedField?.set(buffer, value != null)
+        if (value == null) {
+            _epochSecondField.set(buffer, 0L)
+            _nanoField.set(buffer, 0)
+        } else {
+            _epochSecondField.set(buffer, value.epochSecond)
+            _nanoField.set(buffer, value.nano)
         }
     }
 }
@@ -671,5 +843,36 @@ internal object LayoutManager {
     }
 
     private fun alignUp(offset: Int, align: Int): Int = (offset + align - 1) and (-align)
+}
+//endregion
+
+//region =================== DynamicObjectType ========================
+// 测试实现，只是实现功能，不能作为最终实现。
+internal class DynamicObjectType {
+    private val _properties = mutableListOf<PropertyAccessor>()
+    val properties: List<PropertyAccessor> get() = _properties
+
+    private var _isLayoutInit = false
+    private var _byteSize = -1
+
+    fun <T : PropertyAccessor> register(property: T) : T {
+        property.resetPropertyIndex(properties.size)
+        _properties.add(property)
+        return property
+    }
+
+    private val byteSize : Int get(){
+        return _properties.flatMap { it.getFields() }.sumOf { it.size }
+    }
+
+    fun createInstance() : ByteStorage{
+        if(!_isLayoutInit){
+            LayoutManager.assignOffsets(_properties.flatMap { it.getFields() })
+            _byteSize = byteSize
+            _isLayoutInit = true
+        }
+
+        return ByteStorage(byteSize)
+    }
 }
 //endregion
