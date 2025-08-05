@@ -1,7 +1,6 @@
 package org.example
 
 import org.junit.Assert.*
-import java.nio.ByteBuffer
 import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
@@ -9,12 +8,12 @@ import java.time.*
 
 class PropertyAccessorTest {
 
-    private lateinit var buffer: ByteBuffer
+    private lateinit var buffer: ByteArray
 
     @Before
     fun setUp() {
         // 创建一个足够大的 ByteBuffer 用于测试
-        buffer = ByteBuffer.allocate(64)
+        buffer = ByteArray(64)
     }
     
     @Test
