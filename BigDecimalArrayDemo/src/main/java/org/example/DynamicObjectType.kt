@@ -2,7 +2,6 @@ package org.example
 
 import sun.misc.Unsafe
 import java.math.BigDecimal
-import java.nio.ByteBuffer
 import java.util.UUID
 import java.time.Instant
 import java.time.LocalDate
@@ -30,15 +29,27 @@ internal abstract class Field {
 
     abstract val size: Int
     abstract val alignment: Int
+
+    protected companion object{
+        val UNSAFE = try {
+            val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
+            unsafeField.setAccessible(true)
+            unsafeField.get(null) as Unsafe
+        } catch (e: java.lang.Exception) {
+            throw java.lang.RuntimeException("Failed to initialize Unsafe fields", e)
+        }
+
+        val BASE_OFFSET : Long = Unsafe.ARRAY_BYTE_BASE_OFFSET.toLong()
+    }
 }
 
 internal class BooleanField : Field() {
-    fun get(buffer: ByteBuffer): Boolean = ((buffer.get(byteOffset).toInt() shr bitIndex) and 1) == 1
+    fun get(buffer: ByteArray): Boolean = ((buffer[byteOffset].toInt() shr bitIndex) and 1) == 1
 
-    fun set(buffer: ByteBuffer, value: Boolean) {
-        val original = buffer.get(byteOffset).toInt()
+    fun set(buffer: ByteArray, value: Boolean) {
+        val original = buffer[byteOffset].toInt()
         val updated = if (value) original or (1 shl bitIndex) else original and (1 shl bitIndex).inv()
-        buffer.put(byteOffset, updated.toByte())
+        buffer[byteOffset] = updated.toByte()
     }
 
     // 计算 byteOffset 和 bitIndex 的辅助方法
@@ -58,43 +69,43 @@ internal class BooleanField : Field() {
 }
 
 internal class ByteField : Field() {
-    fun get(buffer: ByteBuffer): Byte = buffer.get(offset)
-    fun set(buffer: ByteBuffer, value: Byte) { buffer.put(offset, value) }
+    fun get(buffer: ByteArray): Byte = buffer[offset]
+    fun set(buffer: ByteArray, value: Byte) { buffer[offset] = value }
     override val size get() = Byte.SIZE_BYTES
     override val alignment get() = 1
 }
 
 internal class ShortField : Field() {
-    fun get(buffer: ByteBuffer): Short = buffer.getShort(offset)
-    fun set(buffer: ByteBuffer, value: Short) { buffer.putShort(offset, value) }
+    fun get(buffer: ByteArray): Short = UNSAFE.getShort(buffer, BASE_OFFSET + offset)
+    fun set(buffer: ByteArray, value: Short) { UNSAFE.putShort(buffer, BASE_OFFSET + offset, value) }
     override val size get() = Short.SIZE_BYTES
     override val alignment get() = 2
 }
 
 internal class IntField : Field() {
-    fun get(buffer: ByteBuffer): Int = buffer.getInt(offset)
-    fun set(buffer: ByteBuffer, value: Int) { buffer.putInt(offset, value) }
+    fun get(buffer: ByteArray): Int = UNSAFE.getInt(buffer, BASE_OFFSET + offset)
+    fun set(buffer: ByteArray, value: Int) { UNSAFE.putInt(buffer, BASE_OFFSET + offset, value) }
     override val size get() = Int.SIZE_BYTES
     override val alignment get() = 4
 }
 
 internal class LongField : Field() {
-    fun get(buffer: ByteBuffer): Long = buffer.getLong(offset)
-    fun set(buffer: ByteBuffer, value: Long) { buffer.putLong(offset, value) }
+    fun get(buffer: ByteArray): Long = UNSAFE.getLong(buffer, BASE_OFFSET + offset)
+    fun set(buffer: ByteArray, value: Long) { UNSAFE.putLong(buffer, BASE_OFFSET + offset, value) }
     override val size get() = Long.SIZE_BYTES
     override val alignment get() = 8
 }
 
 internal class FloatField : Field() {
-    fun get(buffer: ByteBuffer): Float = buffer.getFloat(offset)
-    fun set(buffer: ByteBuffer, value: Float) { buffer.putFloat(offset, value) }
+    fun get(buffer: ByteArray): Float = UNSAFE.getFloat(buffer, BASE_OFFSET + offset)
+    fun set(buffer: ByteArray, value: Float) { UNSAFE.putFloat(buffer, BASE_OFFSET + offset, value) }
     override val size get() = Float.SIZE_BYTES
     override val alignment get() = 4
 }
 
 internal class DoubleField : Field() {
-    fun get(buffer: ByteBuffer): Double = buffer.getDouble(offset)
-    fun set(buffer: ByteBuffer, value: Double) { buffer.putDouble(offset, value) }
+    fun get(buffer: ByteArray): Double = UNSAFE.getDouble(buffer, BASE_OFFSET + offset)
+    fun set(buffer: ByteArray, value: Double) { UNSAFE.putDouble(buffer, BASE_OFFSET + offset, value) }
     override val size get() = Double.SIZE_BYTES
     override val alignment get() = 8
 }
@@ -203,7 +214,7 @@ class SparseObjectMap(initialCapacity: Int = 0) {
 }
 
 internal class ByteStorage(byteSize : Int) {
-    val buffer: ByteBuffer = ByteBuffer.allocate(byteSize)
+    val buffer: ByteArray = ByteArray(byteSize)
     val objectMap = SparseObjectMap()
 }
 //endregion
@@ -219,11 +230,11 @@ internal abstract class PropertyAccessor {
     abstract val nullable: Boolean
     abstract val defaultValue : Any?
     abstract fun getFields(): List<Field>
-    abstract fun get(buffer: ByteBuffer): Any?
+    abstract fun get(buffer: ByteArray): Any?
     open fun get(storage: ByteStorage) : Any?{
         return get(storage.buffer)
     }
-    abstract fun set(buffer: ByteBuffer, value: Any?)
+    abstract fun set(buffer: ByteArray, value: Any?)
     open fun set(storage: ByteStorage, value: Any?){
         set(storage.buffer, value)
     }
@@ -256,22 +267,22 @@ internal class BooleanPropertyAccessor(override val nullable: Boolean, defaultVa
     override val defaultValue: Any?
         get() = if (nullable) null else _defaultValue
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         if (_definedField?.get(buffer) == false) return defaultValue
         return _valueField.get(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         _definedField?.set(buffer, value != null)
         if (value == null) _valueField.set(buffer, _defaultValue) else _valueField.set(buffer, value as Boolean)
     }
 
-    fun getBoolean(buffer: ByteBuffer): Boolean {
+    fun getBoolean(buffer: ByteArray): Boolean {
         if (_definedField?.get(buffer) == false) return _defaultValue
         return _valueField.get(buffer)
     }
 
-    fun setBoolean(buffer: ByteBuffer, value: Boolean) {
+    fun setBoolean(buffer: ByteArray, value: Boolean) {
         _valueField.set(buffer, value)
         _definedField?.set(buffer, true)
     }
@@ -303,22 +314,22 @@ internal class BytePropertyAccessor(override val nullable: Boolean, defaultValue
     override val defaultValue: Any?
         get() = if (nullable) null else _defaultValue
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         if (_definedField?.get(buffer) == false) return defaultValue
         return _valueField.get(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         _definedField?.set(buffer, value != null)
         if (value == null) _valueField.set(buffer, _defaultValue) else _valueField.set(buffer, value as Byte)
     }
 
-    fun getByte(buffer: ByteBuffer): Byte {
+    fun getByte(buffer: ByteArray): Byte {
         if (_definedField?.get(buffer) == false) return _defaultValue
         return _valueField.get(buffer)
     }
 
-    fun setByte(buffer: ByteBuffer, value: Byte) {
+    fun setByte(buffer: ByteArray, value: Byte) {
         _valueField.set(buffer, value)
         _definedField?.set(buffer, true)
     }
@@ -350,22 +361,22 @@ internal class ShortPropertyAccessor(override val nullable: Boolean, defaultValu
     override val defaultValue: Any?
         get() = if (nullable) null else _defaultValue
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         if (_definedField?.get(buffer) == false) return defaultValue
         return _valueField.get(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         _definedField?.set(buffer, value != null)
         if (value == null) _valueField.set(buffer, _defaultValue) else _valueField.set(buffer, value as Short)
     }
 
-    fun getShort(buffer: ByteBuffer): Short {
+    fun getShort(buffer: ByteArray): Short {
         if (_definedField?.get(buffer) == false) return _defaultValue
         return _valueField.get(buffer)
     }
 
-    fun setShort(buffer: ByteBuffer, value: Short) {
+    fun setShort(buffer: ByteArray, value: Short) {
         _valueField.set(buffer, value)
         _definedField?.set(buffer, true)
     }
@@ -400,22 +411,22 @@ internal class IntPropertyAccessor(override val nullable: Boolean, defaultValue 
     override val defaultValue: Any?
         get() = if(nullable) null else _defaultValue
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         if (_definedField?.get(buffer) == false) return defaultValue
         return _valueField.get(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         _definedField?.set(buffer, value != null)
         if (value == null) _valueField.set(buffer, _defaultValue) else _valueField.set(buffer, value as Int)
     }
 
-    fun getInt(buffer: ByteBuffer): Int {
+    fun getInt(buffer: ByteArray): Int {
         if (_definedField?.get(buffer) == false) return _defaultValue
         return _valueField.get(buffer)
     }
 
-    fun setInt(buffer: ByteBuffer, value: Int) {
+    fun setInt(buffer: ByteArray, value: Int) {
         _valueField.set(buffer, value)
         _definedField?.set(buffer, true)
     }
@@ -447,22 +458,22 @@ internal class LongPropertyAccessor(override val nullable: Boolean, defaultValue
     override val defaultValue: Any?
         get() = if (nullable) null else _defaultValue
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         if (_definedField?.get(buffer) == false) return defaultValue
         return _valueField.get(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         _definedField?.set(buffer, value != null)
         if (value == null) _valueField.set(buffer, _defaultValue) else _valueField.set(buffer, value as Long)
     }
 
-    fun getLong(buffer: ByteBuffer): Long {
+    fun getLong(buffer: ByteArray): Long {
         if (_definedField?.get(buffer) == false) return _defaultValue
         return _valueField.get(buffer)
     }
 
-    fun setLong(buffer: ByteBuffer, value: Long) {
+    fun setLong(buffer: ByteArray, value: Long) {
         _valueField.set(buffer, value)
         _definedField?.set(buffer, true)
     }
@@ -494,22 +505,22 @@ internal class FloatPropertyAccessor(override val nullable: Boolean, defaultValu
     override val defaultValue: Any?
         get() = if (nullable) null else _defaultValue
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         if (_definedField?.get(buffer) == false) return defaultValue
         return _valueField.get(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         _definedField?.set(buffer, value != null)
         if (value == null) _valueField.set(buffer, _defaultValue) else _valueField.set(buffer, value as Float)
     }
 
-    fun getFloat(buffer: ByteBuffer): Float {
+    fun getFloat(buffer: ByteArray): Float {
         if (_definedField?.get(buffer) == false) return _defaultValue
         return _valueField.get(buffer)
     }
 
-    fun setFloat(buffer: ByteBuffer, value: Float) {
+    fun setFloat(buffer: ByteArray, value: Float) {
         _valueField.set(buffer, value)
         _definedField?.set(buffer, true)
     }
@@ -541,22 +552,22 @@ internal class DoublePropertyAccessor(override val nullable: Boolean, defaultVal
     override val defaultValue: Any?
         get() = if (nullable) null else _defaultValue
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         if (_definedField?.get(buffer) == false) return defaultValue
         return _valueField.get(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         _definedField?.set(buffer, value != null)
         if (value == null) _valueField.set(buffer, _defaultValue) else _valueField.set(buffer, value as Double)
     }
 
-    fun getDouble(buffer: ByteBuffer): Double {
+    fun getDouble(buffer: ByteArray): Double {
         if (_definedField?.get(buffer) == false) return _defaultValue
         return _valueField.get(buffer)
     }
 
-    fun setDouble(buffer: ByteBuffer, value: Double) {
+    fun setDouble(buffer: ByteArray, value: Double) {
         _valueField.set(buffer, value)
         _definedField?.set(buffer, true)
     }
@@ -573,7 +584,7 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
     override val defaultValue: Any? get() = defaultBigDecimalValue
     private val defaultBigDecimalValue : BigDecimal? get() = if (nullable) null else BigDecimal.ZERO
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         throw RuntimeException("not support")
     }
 
@@ -581,7 +592,7 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
         return getBigDecimal(storage)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         throw RuntimeException("not support")
     }
 
@@ -620,7 +631,7 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
             return
         }
 
-        val intCompact =  UNSAFE.getLong(value, INT_COMPACT_OFFSET)
+        val intCompact = value.getIntCompact()
         val scale = value.scale()
 
         if (intCompact != INFLATED && (scale in Byte.MIN_VALUE .. Byte.MAX_VALUE)) {
@@ -635,18 +646,46 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
     }
 
     private companion object {
-        private val UNSAFE: Unsafe
-        private val INT_COMPACT_OFFSET: Long
+        private val UNSAFE = try {
+            val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
+            unsafeField.setAccessible(true)
+            unsafeField.get(null) as Unsafe
+        } catch (_: java.lang.Exception) {
+            println("Failed to initialize Unsafe fields")
+            //throw java.lang.RuntimeException("Failed to initialize Unsafe fields", e)
+            null
+        }
+
+        private val INT_COMPACT_OFFSET: Long = if (UNSAFE != null) {
+            try {
+                UNSAFE.objectFieldOffset(BigDecimal::class.java.getDeclaredField("intCompact"))
+            } catch (_: java.lang.Exception) {
+                println("Failed to initialize intCompact field")
+                -1L
+            }
+        } else {
+            -1L
+        }
+
         private const val INFLATED = Long.MIN_VALUE
 
-        init {
-            try {
-                val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
-                unsafeField.setAccessible(true)
-                UNSAFE = unsafeField.get(null) as Unsafe
-                INT_COMPACT_OFFSET = UNSAFE.objectFieldOffset(BigDecimal::class.java.getDeclaredField("intCompact"))
-            } catch (e: java.lang.Exception) {
-                throw java.lang.RuntimeException("Failed to initialize Unsafe fields", e)
+        @JvmStatic
+        private fun BigDecimal.getIntCompact(): Long {
+            return if (UNSAFE == null || INT_COMPACT_OFFSET < 0L) {
+                getIntCompactWithPublicAPI(this)
+            } else {
+                UNSAFE.getLong(this, INT_COMPACT_OFFSET)
+            }
+        }
+
+        // 这种方式非常慢。
+        @JvmStatic
+        private fun getIntCompactWithPublicAPI(value: BigDecimal): Long {
+            val unscaledValue = value.unscaledValue()
+            return if (unscaledValue.bitLength() <= 63) {
+                unscaledValue.longValueExact()
+            } else {
+                INFLATED
             }
         }
     }
@@ -661,22 +700,22 @@ internal class UUIDPropertyAccessor(override val nullable: Boolean) : PropertyAc
 
     override val defaultValue: Any? get() = if (nullable) null else EMPTY
 
-    override fun get(buffer: ByteBuffer): Any? {
+    override fun get(buffer: ByteArray): Any? {
         return getUUID(buffer)
     }
 
-    override fun set(buffer: ByteBuffer, value: Any?) {
+    override fun set(buffer: ByteArray, value: Any?) {
         setUUID(buffer, value as UUID?)
     }
 
-    fun getUUID(buffer: ByteBuffer): UUID? {
+    fun getUUID(buffer: ByteArray): UUID? {
         if (_definedField?.get(buffer) == false) return null
         val most = _mostSigBitsField.get(buffer)
         val least = _leastSigBitsField.get(buffer)
         return if (most == 0L && least == 0L) EMPTY else UUID(most, least)
     }
 
-    fun setUUID(buffer: ByteBuffer, value: UUID?) {
+    fun setUUID(buffer: ByteArray, value: UUID?) {
         _definedField?.set(buffer, value != null)
         if (value == null) {
             _mostSigBitsField.set(buffer, 0L)
@@ -699,16 +738,16 @@ internal class LocalDatePropertyAccessor(override val nullable: Boolean) : Prope
     override fun getFields() = listOfNotNull(_epochDayField, _definedField)
     override val defaultValue: Any? get() = if (nullable) null else EMPTY
 
-    override fun get(buffer: ByteBuffer): Any? = getLocalDate(buffer)
-    override fun set(buffer: ByteBuffer, value: Any?) = setLocalDate(buffer, value as LocalDate?)
+    override fun get(buffer: ByteArray): Any? = getLocalDate(buffer)
+    override fun set(buffer: ByteArray, value: Any?) = setLocalDate(buffer, value as LocalDate?)
 
-    fun getLocalDate(buffer: ByteBuffer): LocalDate? {
+    fun getLocalDate(buffer: ByteArray): LocalDate? {
         if (_definedField?.get(buffer) == false) return null
         val epochDay = _epochDayField.get(buffer)
         return if (epochDay == 0L) EMPTY else LocalDate.ofEpochDay(epochDay)
     }
 
-    fun setLocalDate(buffer: ByteBuffer, value: LocalDate?) {
+    fun setLocalDate(buffer: ByteArray, value: LocalDate?) {
         _definedField?.set(buffer, value != null)
         if (value == null) {
             _epochDayField.set(buffer, 0L)
@@ -729,16 +768,16 @@ internal class LocalTimePropertyAccessor(override val nullable: Boolean) : Prope
     override fun getFields() = listOfNotNull(_nanoOfDayField, _definedField)
     override val defaultValue: Any? get() = if (nullable) null else EMPTY
 
-    override fun get(buffer: ByteBuffer): Any? = getLocalTime(buffer)
-    override fun set(buffer: ByteBuffer, value: Any?) = setLocalTime(buffer, value as LocalTime?)
+    override fun get(buffer: ByteArray): Any? = getLocalTime(buffer)
+    override fun set(buffer: ByteArray, value: Any?) = setLocalTime(buffer, value as LocalTime?)
 
-    fun getLocalTime(buffer: ByteBuffer): LocalTime? {
+    fun getLocalTime(buffer: ByteArray): LocalTime? {
         if (_definedField?.get(buffer) == false) return null
         val nanoOfDay = _nanoOfDayField.get(buffer)
         return if (nanoOfDay == 0L) EMPTY else LocalTime.ofNanoOfDay(nanoOfDay)
     }
 
-    fun setLocalTime(buffer: ByteBuffer, value: LocalTime?) {
+    fun setLocalTime(buffer: ByteArray, value: LocalTime?) {
         _definedField?.set(buffer, value != null)
         if (value == null) {
             _nanoOfDayField.set(buffer, 0L)
@@ -760,17 +799,17 @@ internal class LocalDateTimePropertyAccessor(override val nullable: Boolean) : P
     override fun getFields() = listOfNotNull(_epochSecondField, _nanoField, _definedField)
     override val defaultValue: Any? get() = if (nullable) null else EMPTY
 
-    override fun get(buffer: ByteBuffer): Any? = getLocalDateTime(buffer)
-    override fun set(buffer: ByteBuffer, value: Any?) = setLocalDateTime(buffer, value as LocalDateTime?)
+    override fun get(buffer: ByteArray): Any? = getLocalDateTime(buffer)
+    override fun set(buffer: ByteArray, value: Any?) = setLocalDateTime(buffer, value as LocalDateTime?)
 
-    fun getLocalDateTime(buffer: ByteBuffer): LocalDateTime? {
+    fun getLocalDateTime(buffer: ByteArray): LocalDateTime? {
         if (_definedField?.get(buffer) == false) return null
         val epochSecond = _epochSecondField.get(buffer)
         val nano = _nanoField.get(buffer)
         return if (epochSecond == 0L && nano == 0) EMPTY else LocalDateTime.ofEpochSecond(epochSecond, nano, ZoneOffset.UTC)
     }
 
-    fun setLocalDateTime(buffer: ByteBuffer, value: LocalDateTime?) {
+    fun setLocalDateTime(buffer: ByteArray, value: LocalDateTime?) {
         _definedField?.set(buffer, value != null)
         if (value == null) {
             _epochSecondField.set(buffer, 0L)
@@ -794,17 +833,17 @@ internal class InstantPropertyAccessor(override val nullable: Boolean) : Propert
     override fun getFields() = listOfNotNull(_epochSecondField, _nanoField, _definedField)
     override val defaultValue: Any? get() = if (nullable) null else Instant.EPOCH
 
-    override fun get(buffer: ByteBuffer): Any? = getInstant(buffer)
-    override fun set(buffer: ByteBuffer, value: Any?) = setInstant(buffer, value as Instant?)
+    override fun get(buffer: ByteArray): Any? = getInstant(buffer)
+    override fun set(buffer: ByteArray, value: Any?) = setInstant(buffer, value as Instant?)
 
-    fun getInstant(buffer: ByteBuffer): Instant? {
+    fun getInstant(buffer: ByteArray): Instant? {
         if (_definedField?.get(buffer) == false) return null
         val epochSecond = _epochSecondField.get(buffer)
         val nano = _nanoField.get(buffer)
         return if (epochSecond == 0L && nano == 0) Instant.EPOCH else Instant.ofEpochSecond(epochSecond, nano.toLong())
     }
 
-    fun setInstant(buffer: ByteBuffer, value: Instant?) {
+    fun setInstant(buffer: ByteArray, value: Instant?) {
         _definedField?.set(buffer, value != null)
         if (value == null) {
             _epochSecondField.set(buffer, 0L)
