@@ -8,6 +8,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
+import java.util.Date
+import kotlin.math.max
+import kotlin.math.min
 
 //region ================= fields =======================
 /**
@@ -113,130 +116,115 @@ internal class DoubleField : Field() {
 //endregion
 
 //region =================== SparseObjectMap ========================
+internal class ByteDataStorage private constructor(
+    val buffer: ByteArray, private var objectMap: Array<Any?>, private val maxObjectSize : Int
+) {
+    constructor(byteSize: Int, objectSize : Int, maxObjectSize : Int)
+            : this(ByteArray(byteSize), arrayOfNulls(objectSize), maxObjectSize)
 
-/**
- * 稀疏属性索引到对象的映射，内部用 ShortArray 和 Array<Any?>，索引有序，查找用二分法。
- */
-@OptIn(ExperimentalUnsignedTypes::class)
-class SparseObjectMap(initialCapacity: Int = 0) {
-    private var keys = UShortArray(initialCapacity)
-    private var values = arrayOfNulls<Any>(initialCapacity)
-    private var _size = 0
-
-    val size: Int get() = _size
-
-    operator fun get(key: Int): Any? {
-        val k = checkKey(key)
-        val idx = hybridSearch(k)
-        return if (idx >= 0) values[idx] else null
+    fun getLocalValue(accessor: PropertyAccessor): Any? {
+        return accessor.get(this)
     }
 
-    operator fun set(key: Int, value: Any?) {
-        val k = checkKey(key)
-        if (value == null) {
-            remove(key)
-            return
+    fun setLocalValue(accessor: PropertyAccessor, value: Any?) {
+        accessor.set(this, value)
+    }
+
+    fun memberClone(): ByteDataStorage {
+        return ByteDataStorage(buffer.copyOf(), objectMap.copyOf(), maxObjectSize)
+    }
+
+    // region Object 的优化存储
+    // objectMap 最初的版本是使用 稀疏字典 SparseObjectMap，后来发现如果 string 字段太多反而效果不佳。
+    // 后来改为 Array，大小是所有可能用到 Object 存储的属性的总和，但是 BigDecimal 也很尴尬，一般情况下，是不会存储到 Array，
+    // 提前分配空间太浪费，所以这里封装一下，保证正常情况下没有分配空间，但是 真要用的时候也可以重新分配。
+    fun getObject(key: Int): Any? {
+        if(key < 0){
+            throw IllegalArgumentException("key must be >= 0")
         }
-        val idx = hybridSearch(k)
-        if (idx >= 0) {
-            values[idx] = value
+        if(key in objectMap.indices){
+            return objectMap[key]
+        }
+        return null // 不要自动扩容。
+    }
+
+    fun setObject(key: Int, value: Any?) {
+        if(key < 0){
+            throw IllegalArgumentException("key must be >= 0")
+        }
+        if(key in objectMap.indices){
+            objectMap[key] = value
         } else {
-            insertAt(-(idx + 1), k, value)
-        }
-    }
+            // 设置的为null，无需扩容，语义可以保持不变
+            if(value == null){
+                return
+            }
 
-    fun remove(key: Int) {
-        val k = checkKey(key)
-        val idx = hybridSearch(k)
-        if (idx >= 0) removeAt(idx)
-    }
-
-    private fun checkKey(key: Int): UShort {
-        require(key in 0..0xFFFF) { "Key must be in 0..65535, but was $key" }
-        return key.toUShort()
-    }
-
-    private fun hybridSearch(key: UShort): Int {
-        if (_size == 0) return -1
-        if ((_size > 0) && (keys[_size - 1] < key)) {
-            return -_size - 1
-        }
-        var low = 0
-        var high = _size - 1
-        while (low + 32 <= high) {
-            val mid = (low + high) ushr 1
-            val midVal = keys[mid]
-            when {
-                midVal < key -> low = mid + 1
-                midVal > key -> high = mid - 1
-                else -> return mid
+            if(key < maxObjectSize){
+                ensureCapacity(key + 1)
+                objectMap[key] = value
+            } else {
+                throw IllegalStateException("key($key) must be >= 0 and < $maxObjectSize")
             }
         }
-        var x = low
-        while (x <= high) {
-            val v = keys[x]
-            if (v >= key) {
-                if (v == key) return x
-                break
-            }
-            x++
-        }
-        return -(x + 1)
-    }
-
-    private fun insertAt(index: Int, key: UShort, value: Any?) {
-        ensureCapacity(_size + 1)
-        if (index < _size) {
-            keys.copyInto(keys, index + 1, index, _size)
-            values.copyInto(values, index + 1, index, _size)
-        }
-        keys[index] = key
-        values[index] = value
-        _size++
-    }
-
-    private fun removeAt(index: Int) {
-        if (index < _size - 1) {
-            keys.copyInto(keys, index, index + 1, _size)
-            values.copyInto(values, index, index + 1, _size)
-        }
-        _size--
-        values[_size] = null
     }
 
     private fun ensureCapacity(cap: Int) {
-        if (cap > keys.size) {
-            val newCap = if (keys.isEmpty()) 2 else keys.size * 2
-            keys = keys.copyOf(newCap)
-            values = values.copyOf(newCap)
+        val newCap = min(max(objectMap.size * 2, cap),maxObjectSize)
+        if(newCap > objectMap.size){
+            objectMap = objectMap.copyOf(newCap)
         }
     }
-}
-
-internal class ByteStorage(byteSize : Int) {
-    val buffer: ByteArray = ByteArray(byteSize)
-    val objectMap = SparseObjectMap()
+    //endregion
 }
 //endregion
 
 //region =================== PropertyAccessor ========================
 internal abstract class PropertyAccessor {
-    private var _propertyIndex : Int = -1
-    val propertyIndex: Int get() = _propertyIndex
-    fun resetPropertyIndex(index: Int){
-        _propertyIndex = index
+    /**
+     * 用于标记该属性需要 objectMap 存储的概率, 默认是 0.0f 表示绝对不会使用 Object 存储。
+     * 只有返回 > 0 的才会被分配 objectIndex，比如 BigDecimal 概率极低，但仍然大于0，会被考虑分配 ObjectId
+     */
+    open val requiresObjectStorage: Float get() = 0.0f
+
+    private var _objectIndex : Int = -1
+    val objectIndex: Int get() = _objectIndex
+    fun resetObjectIndex(index: Int){
+        _objectIndex = index
     }
 
     abstract val nullable: Boolean
     abstract val defaultValue : Any?
     abstract fun getFields(): List<Field>
     abstract fun get(buffer: ByteArray): Any?
-    open fun get(storage: ByteStorage) : Any?{
+    open fun get(storage: ByteDataStorage) : Any?{
         return get(storage.buffer)
     }
     abstract fun set(buffer: ByteArray, value: Any?)
-    open fun set(storage: ByteStorage, value: Any?){
+    open fun set(storage: ByteDataStorage, value: Any?){
         set(storage.buffer, value)
+    }
+}
+
+internal class ObjectPropertyAccessor : PropertyAccessor(){
+    override fun getFields(): List<Field> = emptyList()
+    override val defaultValue: Any? get() = null
+    override val nullable: Boolean get() = true
+
+    override fun get(storage: ByteDataStorage): Any? {
+        return storage.getObject(this.objectIndex)
+    }
+
+    override fun set(storage: ByteDataStorage, value: Any?) {
+        storage.setObject(this.objectIndex, value)
+    }
+
+    override fun get(buffer: ByteArray): Any? {
+        throw RuntimeException("not support")
+    }
+
+    override fun set(buffer: ByteArray, value: Any?) {
+        throw RuntimeException("not support")
     }
 }
 
@@ -579,6 +567,7 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
     private val _definedField: BooleanField? = if (nullable) BooleanField() else null
 
     override fun getFields() = listOfNotNull(_intCompactField, _scaleField, _definedField)
+    override val requiresObjectStorage: Float get() = 0.001f  // 概率极低，但仍然需要分配 ObjectId
 
     // 为降低复杂度，BigDecimal 不支持自定义的缺省值。 nullable = false 时，intCompact 和 scale 正好都是 0.
     override val defaultValue: Any? get() = defaultBigDecimalValue
@@ -588,7 +577,7 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
         throw RuntimeException("not support")
     }
 
-    override fun get(storage: ByteStorage): Any? {
+    override fun get(storage: ByteDataStorage): Any? {
         return getBigDecimal(storage)
     }
 
@@ -596,13 +585,12 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
         throw RuntimeException("not support")
     }
 
-    override fun set(storage: ByteStorage, value: Any?) {
+    override fun set(storage: ByteDataStorage, value: Any?) {
         setBigDecimal(storage, value as BigDecimal?)
     }
 
-    fun getBigDecimal(storage: ByteStorage): BigDecimal? {
+    fun getBigDecimal(storage: ByteDataStorage): BigDecimal? {
         val buffer = storage.buffer
-        val objectMap = storage.objectMap
 
         if (_definedField?.get(buffer) == false) return null
 
@@ -611,7 +599,7 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
             // 从 objectMap 中获取值，如果获取的值是 null, 返回 默认值
             // 注意这里和 UUID 的处理方式不同，UUID 一定能用两个 long 存储，但 BigDecimal 可能数值过大，还是放到 objectMap
             // 这里 obj 一定不会为 null(程序实现为了简单返回了 defaultBigDecimalValue )，而 UUID 简单的返回 EMPTY 即可。
-            val obj: BigDecimal? = objectMap[propertyIndex] as BigDecimal?
+            val obj: BigDecimal? = storage.getObject(objectIndex) as BigDecimal?
             obj ?: defaultBigDecimalValue
         } else {
             // 从数据中恢复, scale 可以是负数也可以是正数
@@ -619,15 +607,14 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
         }
     }
 
-    fun setBigDecimal(storage: ByteStorage, value: BigDecimal?) {
+    fun setBigDecimal(storage: ByteDataStorage, value: BigDecimal?) {
         val buffer = storage.buffer
-        val objectMap = storage.objectMap
 
         _definedField?.set(buffer, value != null)
         if (value == null) {
             _intCompactField.set(buffer, 0L)
             _scaleField.set(buffer, 0)
-            objectMap[propertyIndex] = null
+            storage.setObject(objectIndex, null)
             return
         }
 
@@ -637,11 +624,11 @@ internal class BigDecimalPropertyAccessor(override val nullable: Boolean) : Prop
         if (intCompact != INFLATED && (scale in Byte.MIN_VALUE .. Byte.MAX_VALUE)) {
             _intCompactField.set(buffer, intCompact)
             _scaleField.set(buffer, scale.toByte())
-            objectMap[propertyIndex] = null
+            storage.setObject(objectIndex, null)
         } else {
             _intCompactField.set(buffer, INFLATED)
             _scaleField.set(buffer, 0)
-            objectMap[propertyIndex] = value
+            storage.setObject(objectIndex, value)
         }
     }
 
@@ -854,6 +841,36 @@ internal class InstantPropertyAccessor(override val nullable: Boolean) : Propert
         }
     }
 }
+
+internal class DatePropertyAccessor(override val nullable: Boolean) : PropertyAccessor() {
+    private val _timeField = LongField()
+    private val _definedField: BooleanField? = if (nullable) BooleanField() else null
+
+    override fun getFields() = listOfNotNull(_timeField, _definedField)
+    override val defaultValue: Any? get() = if (nullable) null else EMPTY
+
+    override fun get(buffer: ByteArray): Any? = getDate(buffer)
+    override fun set(buffer: ByteArray, value: Any?) = setDate(buffer, value as Date?)
+
+    fun getDate(buffer: ByteArray): Date? {
+        if (_definedField?.get(buffer) == false) return null
+        val time = _timeField.get(buffer)
+        return if (time == 0L) EMPTY else Date(time)
+    }
+
+    fun setDate(buffer: ByteArray, value: Date?) {
+        _definedField?.set(buffer, value != null)
+        if (value == null) {
+            _timeField.set(buffer, 0L)
+        } else {
+            _timeField.set(buffer, value.time)
+        }
+    }
+
+    companion object {
+        val EMPTY: Date = Date(0L)
+    }
+}
 //endregion
 
 //region =================== LayoutManager ========================
@@ -882,6 +899,29 @@ internal object LayoutManager {
     }
 
     private fun alignUp(offset: Int, align: Int): Int = (offset + align - 1) and (-align)
+
+    fun calcObjectInitSize(properties: Iterable<PropertyAccessor>): Pair<Int, Int> {
+        var objectIndex = 0
+        var initSize = 0.0f
+
+        for (property in properties) {
+            // 只要有概率进行 Object 存储，就一定分配编号，
+            val size = property.requiresObjectStorage
+            if (size > 0.0f) {
+                property.resetObjectIndex(objectIndex++)
+                require(size <= 1.0f)
+                initSize += size
+            }
+        }
+        // 截取尾部的小数，这样比较激进一些，比如 4.009， 我们实际分配 4
+        return Pair(initSize.toInt(), objectIndex)
+    }
+
+    fun calcByteSize(properties: Iterable<PropertyAccessor>): Int {
+        val fields = properties.flatMap { it.getFields() }
+        assignOffsets(fields)
+        return fields.sumOf { it.size }
+    }
 }
 //endregion
 
@@ -891,27 +931,24 @@ internal class DynamicObjectType {
     private val _properties = mutableListOf<PropertyAccessor>()
     val properties: List<PropertyAccessor> get() = _properties
 
-    private var _isLayoutInit = false
     private var _byteSize = -1
+    private var _objectSize = -1
+    private var _objectMaxSize = -1
 
     fun <T : PropertyAccessor> register(property: T) : T {
-        property.resetPropertyIndex(properties.size)
         _properties.add(property)
         return property
     }
 
-    private val byteSize : Int get(){
-        return _properties.flatMap { it.getFields() }.sumOf { it.size }
-    }
-
-    fun createInstance() : ByteStorage{
-        if(!_isLayoutInit){
-            LayoutManager.assignOffsets(_properties.flatMap { it.getFields() })
-            _byteSize = byteSize
-            _isLayoutInit = true
+    fun createInstance() : ByteDataStorage{
+        if(_objectSize < 0 || _byteSize < 0 || _objectMaxSize < 0){
+            _byteSize = LayoutManager.calcByteSize(_properties)
+            val s = LayoutManager.calcObjectInitSize(_properties)
+            _objectSize = s.first
+            _objectMaxSize = s.second
         }
 
-        return ByteStorage(byteSize)
+        return ByteDataStorage(_byteSize, _objectSize, _objectMaxSize)
     }
 }
 //endregion

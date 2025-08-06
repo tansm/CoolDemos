@@ -1184,4 +1184,65 @@ class PropertyAccessorTest {
         assertEquals(Instant.EPOCH, accessor.getInstant(buffer))
         assertEquals(Instant.EPOCH, accessor.get(buffer))
     }
+    
+    @Test
+    fun testDatePropertyAccessorNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(DatePropertyAccessor(nullable = true))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertNull(accessor.defaultValue)
+        assertNull(accessor.getDate(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置 null
+        accessor.setDate(buffer, null)
+        assertNull(accessor.getDate(buffer))
+        assertNull(accessor.get(buffer))
+
+        // 设置普通 Date
+        val date = java.util.Date(1691147696789L)
+        accessor.setDate(buffer, date)
+        assertEquals(date, accessor.getDate(buffer))
+        assertEquals(date, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.set(buffer, DatePropertyAccessor.EMPTY)
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.getDate(buffer))
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 再次设置 null
+        accessor.setDate(buffer, null)
+        assertNull(accessor.getDate(buffer))
+        assertNull(accessor.get(buffer))
+    }
+
+    @Test
+    fun testDatePropertyAccessorNonNullable() {
+        val dt = DynamicObjectType()
+        val accessor = dt.register(DatePropertyAccessor(nullable = false))
+        val buffer = dt.createInstance().buffer
+
+        // 默认值
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.defaultValue)
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.getDate(buffer))
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置 null，等价于 reset
+        accessor.setDate(buffer, null)
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.getDate(buffer))
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.get(buffer))
+
+        // 设置普通 Date
+        val date = java.util.Date(1691147696789L)
+        accessor.setDate(buffer, date)
+        assertEquals(date, accessor.getDate(buffer))
+        assertEquals(date, accessor.get(buffer))
+
+        // 设置 EMPTY
+        accessor.setDate(buffer, DatePropertyAccessor.EMPTY)
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.getDate(buffer))
+        assertEquals(DatePropertyAccessor.EMPTY, accessor.get(buffer))
+    }
 }
