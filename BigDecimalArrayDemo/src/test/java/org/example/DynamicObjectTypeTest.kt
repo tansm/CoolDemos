@@ -8,6 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
+import java.util.Date
 import java.util.UUID
 
 class DynamicObjectTypeTest {
@@ -28,6 +29,7 @@ class DynamicObjectTypeTest {
             register(LocalTimePropertyAccessor(false))                       // 10
             register(LocalDateTimePropertyAccessor(false))                   // 11
             register(InstantPropertyAccessor(false))                         // 12
+            register(DatePropertyAccessor(false))                            // 13
         }
 
         val target = dt.createInstance()
@@ -44,6 +46,7 @@ class DynamicObjectTypeTest {
         assertEquals(LocalTime.ofNanoOfDay(0), dt.properties[10].get(target))
         assertEquals(LocalDateTime.ofEpochSecond(0,0, ZoneOffset.UTC), dt.properties[11].get(target))
         assertEquals(Instant.EPOCH, dt.properties[12].get(target))
+        assertEquals(Date(0), dt.properties[13].get(target))
 
         testOtherValues(dt, target)
     }
@@ -64,6 +67,7 @@ class DynamicObjectTypeTest {
             register(LocalTimePropertyAccessor(true))                       // 10
             register(LocalDateTimePropertyAccessor(true))                   // 11
             register(InstantPropertyAccessor(true))                         // 12
+            register(DatePropertyAccessor(true))                            // 13
         }
 
         val target = dt.createInstance()
@@ -80,11 +84,12 @@ class DynamicObjectTypeTest {
         assertNull(dt.properties[10].get(target))
         assertNull(dt.properties[11].get(target))
         assertNull(dt.properties[12].get(target))
+        assertNull(dt.properties[13].get(target))
 
         testOtherValues(dt, target)
     }
 
-    private fun testOtherValues(dt: DynamicObjectType, target: ByteStorage) {
+    private fun testOtherValues(dt: DynamicObjectType, target: ByteDataStorage) {
         dt.properties[0].set(target, true)
         assertEquals(true, dt.properties[0].get(target))
         dt.properties[1].set(target, 1.toByte())
@@ -112,6 +117,7 @@ class DynamicObjectTypeTest {
         assertEquals(LocalDateTime.ofEpochSecond(11,11, ZoneOffset.UTC), dt.properties[11].get(target))
         dt.properties[12].set(target, Instant.ofEpochSecond(12,12))
         assertEquals(Instant.ofEpochSecond(12,12), dt.properties[12].get(target))
-
+        dt.properties[13].set(target, Date(13))
+        assertEquals(Date(13), dt.properties[13].get(target))
     }
 }
