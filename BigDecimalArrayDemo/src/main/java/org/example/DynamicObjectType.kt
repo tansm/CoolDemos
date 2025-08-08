@@ -170,7 +170,9 @@ internal class ByteDataStorage private constructor(
     }
 
     private fun ensureCapacity(cap: Int) {
-        val newCap = min(max(objectMap.size * 2, cap),maxObjectSize)
+        // 这里没有使用 * 2 的常见策略，因为实体中 Object 类型的字段已经初始化过，再 * 2 就会激增太多。
+        // 目前是 16， 一个 object 如果压缩指针是 4 字节，那么就是 64 Byte.
+        val newCap = min(max(objectMap.size + 16, cap),maxObjectSize)
         if(newCap > objectMap.size){
             objectMap = objectMap.copyOf(newCap)
         }
@@ -210,6 +212,7 @@ internal class ObjectPropertyAccessor : PropertyAccessor(){
     override fun getFields(): List<Field> = emptyList()
     override val defaultValue: Any? get() = null
     override val nullable: Boolean get() = true
+    override val requiresObjectStorage: Float get() = 1.0f
 
     override fun get(storage: ByteDataStorage): Any? {
         return storage.getObject(this.objectIndex)
@@ -901,20 +904,32 @@ internal object LayoutManager {
     private fun alignUp(offset: Int, align: Int): Int = (offset + align - 1) and (-align)
 
     fun calcObjectInitSize(properties: Iterable<PropertyAccessor>): Pair<Int, Int> {
-        var objectIndex = 0
         var initSize = 0.0f
+        val orderedProperties = ArrayList<PropertyAccessor>()
 
         for (property in properties) {
             // 只要有概率进行 Object 存储，就一定分配编号，
             val size = property.requiresObjectStorage
             if (size > 0.0f) {
-                property.resetObjectIndex(objectIndex++)
+                orderedProperties.add(property)
                 require(size <= 1.0f)
                 initSize += size
             }
         }
+
+        // 将 properties 中 requiresObjectStorage 的属性按照权重排序，为什么要这样做呢？
+        // 假设 0..9 是 BigDecimal 类型， 10..89 是 int 类型， 90..99 是 String 类型，
+        // initSize.toInt() 最终只有 String 预分配了 10, 即初始化 objectMap[10],但他们的 ObjectIndex 是 10 .. 19
+        // 当为任何一个 String 属性赋值时，其编号都大于 10，将触发扩容，这违背了我们最初的设计：希望常见的Object类型预先分配空间。
+        // 所以这里根据 requiresObjectStorage 排序后，String 被排序到前面，即 ObjectIndex 是 0 .. 9,这时不再发生扩容。
+        var objectSize = 0
+        orderedProperties.sortByDescending { it.requiresObjectStorage }
+        for (property in orderedProperties){
+            property.resetObjectIndex(objectSize++)
+        }
+
         // 截取尾部的小数，这样比较激进一些，比如 4.009， 我们实际分配 4
-        return Pair(initSize.toInt(), objectIndex)
+        return Pair(initSize.toInt(), objectSize)
     }
 
     fun calcByteSize(properties: Iterable<PropertyAccessor>): Int {
