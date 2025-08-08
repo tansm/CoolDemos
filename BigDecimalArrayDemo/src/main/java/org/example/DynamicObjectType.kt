@@ -33,6 +33,12 @@ internal abstract class Field {
     abstract val size: Int
     abstract val alignment: Int
 
+    protected fun checkOffset(buffer: ByteArray){
+        require(offset in 0 .. buffer.size - size){
+            "Field offset not initialized or out of range: $offset , buffer.size: ${buffer.size}"
+        }
+    }
+
     protected companion object{
         val UNSAFE = try {
             val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe")
@@ -79,36 +85,67 @@ internal class ByteField : Field() {
 }
 
 internal class ShortField : Field() {
-    fun get(buffer: ByteArray): Short = UNSAFE.getShort(buffer, BASE_OFFSET + offset)
-    fun set(buffer: ByteArray, value: Short) { UNSAFE.putShort(buffer, BASE_OFFSET + offset, value) }
+    fun get(buffer: ByteArray): Short {
+        // 还是严格检查，不然可能存在隐患，比如崩溃或写错数据。bool, byte, 直接使用数组，已经内建检查
+        checkOffset(buffer)
+        return UNSAFE.getShort(buffer, BASE_OFFSET + offset)
+    }
+    fun set(buffer: ByteArray, value: Short) {
+        checkOffset(buffer)
+        UNSAFE.putShort(buffer, BASE_OFFSET + offset, value)
+    }
     override val size get() = Short.SIZE_BYTES
     override val alignment get() = 2
 }
 
 internal class IntField : Field() {
-    fun get(buffer: ByteArray): Int = UNSAFE.getInt(buffer, BASE_OFFSET + offset)
-    fun set(buffer: ByteArray, value: Int) { UNSAFE.putInt(buffer, BASE_OFFSET + offset, value) }
+    fun get(buffer: ByteArray): Int {
+        checkOffset(buffer)
+        return UNSAFE.getInt(buffer, BASE_OFFSET + offset)
+    }
+    fun set(buffer: ByteArray, value: Int) {
+        checkOffset(buffer)
+        UNSAFE.putInt(buffer, BASE_OFFSET + offset, value)
+    }
     override val size get() = Int.SIZE_BYTES
     override val alignment get() = 4
 }
 
 internal class LongField : Field() {
-    fun get(buffer: ByteArray): Long = UNSAFE.getLong(buffer, BASE_OFFSET + offset)
-    fun set(buffer: ByteArray, value: Long) { UNSAFE.putLong(buffer, BASE_OFFSET + offset, value) }
+    fun get(buffer: ByteArray): Long {
+        checkOffset(buffer)
+        return UNSAFE.getLong(buffer, BASE_OFFSET + offset)
+    }
+    fun set(buffer: ByteArray, value: Long) {
+        checkOffset(buffer)
+        UNSAFE.putLong(buffer, BASE_OFFSET + offset, value)
+    }
     override val size get() = Long.SIZE_BYTES
     override val alignment get() = 8
 }
 
 internal class FloatField : Field() {
-    fun get(buffer: ByteArray): Float = UNSAFE.getFloat(buffer, BASE_OFFSET + offset)
-    fun set(buffer: ByteArray, value: Float) { UNSAFE.putFloat(buffer, BASE_OFFSET + offset, value) }
+    fun get(buffer: ByteArray): Float {
+        checkOffset(buffer)
+        return UNSAFE.getFloat(buffer, BASE_OFFSET + offset)
+    }
+    fun set(buffer: ByteArray, value: Float) {
+        checkOffset(buffer)
+        UNSAFE.putFloat(buffer, BASE_OFFSET + offset, value)
+    }
     override val size get() = Float.SIZE_BYTES
     override val alignment get() = 4
 }
 
 internal class DoubleField : Field() {
-    fun get(buffer: ByteArray): Double = UNSAFE.getDouble(buffer, BASE_OFFSET + offset)
-    fun set(buffer: ByteArray, value: Double) { UNSAFE.putDouble(buffer, BASE_OFFSET + offset, value) }
+    fun get(buffer: ByteArray): Double {
+        checkOffset(buffer)
+        return UNSAFE.getDouble(buffer, BASE_OFFSET + offset)
+    }
+    fun set(buffer: ByteArray, value: Double) {
+        checkOffset(buffer)
+        UNSAFE.putDouble(buffer, BASE_OFFSET + offset, value)
+    }
     override val size get() = Double.SIZE_BYTES
     override val alignment get() = 8
 }
