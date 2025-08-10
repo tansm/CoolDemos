@@ -1,12 +1,25 @@
 package org.example
 
+import org.example.LayoutChecker.UNSAFE
 import sun.misc.Unsafe
+import java.lang.reflect.Field
 import java.nio.ByteOrder
 
+/**
+ * CompactStringUtils
+ *  - 仅支持小端 + JDK8 String(value: char[], hash: int)。
+ *  - 充分复用 header:Int 的高 3 字节作为 payload（payload 从 header+1 开始）。
+ *  - ASCII 按 1B/char；非 ASCII 按 UTF-16 2B/char。
+ *  - 为了降低 GC 压力，这里只做四档/五档容量（4/12/20/28/36 字节窗口）。
+ */
 object CompactStringUtils {
+
+    // ========================
+    //   数据对象及派生类型
+    // ========================
     private abstract class CompactString {
-        // ——— 只有一个字段，用作 header（1 byte）+ padding（3 bytes）, 必须保证是小端布局。
-        // 小端存储时，值： 0x01020304 , 在实际的内存布局是： 0x04, 0x03, 0x03, 0x01 ， 也就是说要获取实际的第 0 个字节，是取最低位。
+        // 只有一个字段：header（低 1 字节为 meta；高 3 字节被 payload 复用）。
+        // 小端前提：读取 Int 的最低 8 位就是 meta。
         @Suppress("unused")
         private var header: Int = 0
 
@@ -15,280 +28,182 @@ object CompactStringUtils {
         override fun toString(): String {
             val accessor = compactStringAccessor ?: error("CompactString accessor not available on this runtime")
             val meta = header
-            val isAscii = (meta and 0x80) != 0  // 最高位存储 1， 表示 ascii 模式
-            val length = meta and 0x7F          // 长度，理论范围： 0 .. 127
+            val isAscii = (meta and 0x80) != 0  // 最高位 = 1 表示 ASCII
+            val length = meta and 0x7F          // 0..127
             return if (isAscii) {
                 String(accessor.getRawAsciiBytes(this, length), 0, length, Charsets.US_ASCII)
             } else {
                 String(accessor.getRawChars(this, length))
             }
         }
+
+        fun fromString(ascii: Boolean, chars: CharArray) {
+            val accessor = compactStringAccessor ?: error("CompactString accessor not available on this runtime")
+            // meta：bit7=ASCII 标志；低 7 位 = length
+            header = ((if (ascii) 0x80 else 0x00) or chars.size) and 0xFF
+
+            if (ascii) {
+                // char->byte 需要显式窄化；构造一次性 byte[] 再 copyMemory
+                val bytes = ByteArray(chars.size)
+                for (i in chars.indices) bytes[i] = (chars[i].code and 0x7F).toByte()
+                accessor.setRawAsciiBytes(this, bytes)
+            } else {
+                accessor.setRawChars(this, chars)
+            }
+        }
     }
 
-    // —— 子类：整块窗口总大小（header(4) + 后续 long*8）——
-    private class String4 : CompactString() {
-        override val compactStringAccessor: CompactStringAccessor? get() = string4Accessor
-    }
+    // —— 子类：整块窗口总大小（header(4) + 若干 long*8）；payload 有效容量 = 窗口 - 1
+    private class String4  : CompactString() { override val compactStringAccessor get() = string4Accessor }
+    private class String12 : CompactString() { @Suppress("unused") private var l0: Long = 0L; override val compactStringAccessor get() = string12Accessor }
+    private class String20 : CompactString() { @Suppress("unused") private var l0: Long = 0L; @Suppress("unused") private var l1: Long = 0L; override val compactStringAccessor get() = string20Accessor }
+    private class String28 : CompactString() { @Suppress("unused") private var l0: Long = 0L; @Suppress("unused") private var l1: Long = 0L; @Suppress("unused") private var l2: Long = 0L; override val compactStringAccessor get() = string28Accessor }
+    private class String36 : CompactString() { @Suppress("unused") private var l0: Long = 0L; @Suppress("unused") private var l1: Long = 0L; @Suppress("unused") private var l2: Long = 0L; @Suppress("unused") private var l3: Long = 0L; override val compactStringAccessor get() = string36Accessor }
 
-    private class String12 : CompactString() {
-        @Suppress("unused")
-        private var l0: Long = 0L
-        override val compactStringAccessor: CompactStringAccessor? get() = string12Accessor
-    }
-
-    private class String20 : CompactString() {
-        @Suppress("unused")
-        private var l0: Long = 0L
-
-        @Suppress("unused")
-        private var l1: Long = 0L
-
-        override val compactStringAccessor: CompactStringAccessor? get() = string20Accessor
-    }
-
-    private class String28 : CompactString() {
-        @Suppress("unused")
-        private var l0: Long = 0L
-
-        @Suppress("unused")
-        private var l1: Long = 0L
-
-        @Suppress("unused")
-        private var l2: Long = 0L
-
-        override val compactStringAccessor: CompactStringAccessor? get() = string28Accessor
-    }
-
-    private class String36 : CompactString() {
-        @Suppress("unused")
-        private var l0: Long = 0L
-
-        @Suppress("unused")
-        private var l1: Long = 0L
-
-        @Suppress("unused")
-        private var l2: Long = 0L
-
-        @Suppress("unused")
-        private var l3: Long = 0L
-
-        override val compactStringAccessor: CompactStringAccessor? get() = string36Accessor
-    }
-
-    // ——— 访问器定义：与 CompactString 的某个派生类型一一对应。  ———
+    // ========================
+    //   访问器：按类缓存偏移与容量
+    // ========================
     private class CompactStringAccessor(clazz: Class<*>, val maxByteLength: Int) {
-        private val _payloadOffset: Long    // 缓存起来
-
+        private val payloadOffset: Long
         init {
-            // payload 起始偏移 = header 偏移 + 1 字节（复用 header 剩余 3 字节）
-            val headerField = clazz.getDeclaredField(HEADER_NAME)
-            _payloadOffset = UNSAFE.objectFieldOffset(headerField) + 1
+            // 注意：header 在父类 CompactString 上，不能用 clazz.getDeclaredField("header")！
+            val headerField = findHeaderField(clazz)
+            payloadOffset = UNSAFE.objectFieldOffset(headerField) + 1 // 复用 header 后 3 字节
         }
-
         fun getRawAsciiBytes(obj: CompactString, length: Int): ByteArray {
+            require(length < maxByteLength) { "ascii payload overflow: len=$length cap=$maxByteLength" }
             val dst = ByteArray(length)
-            UNSAFE.copyMemory(
-                obj, _payloadOffset, dst,
-                BYTE_ARRAY_BASE_OFFSET, length.toLong()
-            )
+            UNSAFE.copyMemory(obj, payloadOffset, dst, BYTE_ARRAY_BASE_OFFSET, length.toLong())
             return dst
         }
-
         fun getRawChars(obj: CompactString, length: Int): CharArray {
+            val bytes = length * 2
+            require(bytes < maxByteLength) { "utf16 payload overflow: bytes=$bytes cap=$maxByteLength" }
             val dst = CharArray(length)
-            UNSAFE.copyMemory(
-                obj, _payloadOffset, dst,
-                CHAR_ARRAY_BASE_OFFSET, (length * 2).toLong()
-            )
+            UNSAFE.copyMemory(obj, payloadOffset, dst, CHAR_ARRAY_BASE_OFFSET, bytes.toLong())
             return dst
         }
+        fun setRawAsciiBytes(obj: CompactString, bytes: ByteArray) {
+            require(bytes.size < maxByteLength) { "ascii payload overflow: len=${bytes.size} cap=$maxByteLength" }
+            UNSAFE.copyMemory(bytes, BYTE_ARRAY_BASE_OFFSET, obj, payloadOffset, bytes.size.toLong())
+        }
+        fun setRawChars(obj: CompactString, chars: CharArray) {
+            val bytes = chars.size * 2
+            require(bytes < maxByteLength) { "utf16 payload overflow: bytes=$bytes cap=$maxByteLength" }
+            UNSAFE.copyMemory(chars, CHAR_ARRAY_BASE_OFFSET, obj, payloadOffset, bytes.toLong())
+        }
     }
 
-    // ——— 访问器定义：与 String 对应，如果不兼容 JDK 1.8, 不会实例化  ———
-    private class StringAccessor(
-        private val valueField: java.lang.reflect.Field
-    ) {
-
+    // String 访问器：仅在 JDK8( value: char[], hash: int ) 且小端时启用
+    private class StringAccessor(private val valueOffset: Long) {
+        fun getChars(str: String): CharArray = UNSAFE.getObject(str, valueOffset) as CharArray
     }
 
-    private fun createCompactStringAccessor(clazz: Class<*>, maxByteLength: Int) : CompactStringAccessor?{
-        // 如果是不兼容的 String ，不要初始化此实例。accessor 需要先初始化。
+    private fun findHeaderField(clazz: Class<*>): Field {
+        var c: Class<*>? = clazz
+        while (c != null) {
+            try {
+                val f = c.getDeclaredField(HEADER_NAME)
+                f.isAccessible = true
+                return f
+            } catch (_: NoSuchFieldException) {
+                c = c.superclass
+            }
+        }
+        throw NoSuchFieldException("header not found in hierarchy of ${clazz.name}")
+    }
+
+    private fun createCompactStringAccessor(clazz: Class<*>, maxByteLength: Int): CompactStringAccessor? {
+        // 只有在 StringAccessor 就绪时才创建（encode 统一走零分配路径）
         if (accessor == null) return null
-
-        return try {
-            CompactStringAccessor(clazz, maxByteLength)
-        }catch (_ : Throwable){
-            null
-        }
+        return try { CompactStringAccessor(clazz, maxByteLength) } catch (_: Throwable) { null }
     }
 
-        // ===== Unsafe & 常量 =====
-        private val UNSAFE: Unsafe = run {
-            val f = Unsafe::class.java.getDeclaredField("theUnsafe")
-            f.isAccessible = true
-            f.get(null) as Unsafe
+    private fun createStringAccessor(): StringAccessor? {
+        // 只能小端；大端下 header 低字节位置不同
+        if (!LayoutChecker.isLittleEndian()) return null
+        // JDK8 String: value(char[]), hash(int)
+        if (!LayoutChecker.verifyLayout(String::class.java, "value" to CharArray::class.java, "hash" to Int::class.java)) return null
+        val valueField = try { String::class.java.getDeclaredField("value").apply { isAccessible = true } } catch (_: Throwable) { null }
+        if (valueField != null) {
+            val valueOffset = UNSAFE.objectFieldOffset(valueField)
+            return StringAccessor(valueOffset)
         }
+        return null
+    }
+
+    // ========================
+    //   常量与运行时能力（按声明顺序初始化）
+    // ========================
     private val BYTE_ARRAY_BASE_OFFSET: Long = Unsafe.ARRAY_BYTE_BASE_OFFSET.toLong()
     private val CHAR_ARRAY_BASE_OFFSET: Long = Unsafe.ARRAY_CHAR_BASE_OFFSET.toLong()
-    private const val MAX_CHAR_LENGTH = 127
-        private const val HEADER_NAME = "header"
 
-        // 运行时访问器（init 中完成；失败则为 null）, 必须放在前面。
-        @JvmStatic
-        private val accessor: StringAccessor?
+    // 我们不打算压缩到 127；为了平衡 GC 与收益，限制到 35（ASCII 支持到 35，非 ASCII 最多 17）
+    private const val MAX_CHAR_LENGTH = 35
+    private const val HEADER_NAME = "header"
 
-        @JvmStatic
-        private val string4Accessor = createCompactStringAccessor(String4::class.java, 4)
+    // 运行时访问器（必须先于 stringNAccessor 初始化）
+    @JvmStatic private val accessor: StringAccessor? = createStringAccessor()
 
-        @JvmStatic
-        private val string12Accessor= createCompactStringAccessor(String12::class.java, 12)
+    // 对应窗口尺寸的访问器
+    @JvmStatic private val string4Accessor:  CompactStringAccessor? = createCompactStringAccessor(String4::class.java, 4)
+    @JvmStatic private val string12Accessor: CompactStringAccessor? = createCompactStringAccessor(String12::class.java, 12)
+    @JvmStatic private val string20Accessor: CompactStringAccessor? = createCompactStringAccessor(String20::class.java, 20)
+    @JvmStatic private val string28Accessor: CompactStringAccessor? = createCompactStringAccessor(String28::class.java, 28)
+    @JvmStatic private val string36Accessor: CompactStringAccessor? = createCompactStringAccessor(String36::class.java, 36)
 
-        @JvmStatic
-        private val string20Accessor= createCompactStringAccessor(String20::class.java, 20)
+    private const val EMPTY_STRING = ""
 
-        @JvmStatic
-        private val string28Accessor= createCompactStringAccessor(String28::class.java, 28)
+    /**
+     * 尝试压缩；若运行时不兼容或容量不足，则返回原生 String。
+     */
+    fun encode(str: String?): Any? {
+        // 不兼容 / 超长：直接返回；空串复用同一实例
+        if (str == null || accessor == null || str.length > MAX_CHAR_LENGTH) return str
+        if (str.isEmpty()) return EMPTY_STRING
 
-        @JvmStatic
-        private val string36Accessor= createCompactStringAccessor(String36::class.java, 36)
+        // 判 ASCII（短路）
+        var ascii = true
+        for (c in str) { if (c.code > 0x7F) { ascii = false; break } }
 
-    // todo 下面没有完成
-        // 兼容 JDK8 的 String 反射字段（若不可用则为 null）
-        @JvmStatic
-        private var STRING_VALUE_F: java.lang.reflect.Field? = null
-
-        @JvmStatic
-        private var STRING_OFFSET_F: java.lang.reflect.Field? = null
-
-        @JvmStatic
-        private var STRING_COUNT_F: java.lang.reflect.Field? = null
-
-        @JvmStatic
-        private var STRING_VALUE_OFF: Long = -1
-
-
-        fun encode(str: String): Any {
-            // 上限：最坏情况（UTF-16）总字节 = 1(meta) + 2*len
-            val worst = 1 + str.length * 2
-            if (worst > 124 || str.length > MAX_CHAR_LENGTH) return str
-
-            // 判 ASCII（短路退出）
-            var ascii = true
-            for (c in str) {
-                if (c.code > 0x7F) {
-                    ascii = false; break
-                }
-            }
-
-            val totalBytes = if (ascii) 1 + str.length else 1 + str.length * 2
-            val result: CompactString = when {
-                totalBytes <= 4 -> String4()
-                totalBytes <= 12 -> String12()
-                totalBytes <= 20 -> String20()
-                else -> String124()
-            }
-
-            // meta：bit7=ASCII 标志，低 7 位 = length
-            val meta = ((if (ascii) 0x80 else 0x00) or str.length) and 0xFF
-            UNSAFE.putInt(result, headerOff(result.javaClass), meta)
-
-            val po = payloadOff(result.javaClass)
-            if (ascii) {
-                // 逐字节收集到临时 byte[] 再一次拷贝（char->byte 无法直接 copyMemory）
-                val bytes = ByteArray(str.length)
-                for (i in str.indices) bytes[i] = (str[i].code and 0x7F).toByte()
-                UNSAFE.copyMemory(bytes, BYTE_ARRAY_BASE_OFFSET, result, po, str.length.toLong())
-            } else {
-                // 非 ASCII：尽量零拷贝从 String 内部 char[] 复制；若不可用则 toCharArray()
-                val vf = STRING_VALUE_F
-                if (vf != null && STRING_VALUE_OFF >= 0) {
-                    val chars = UNSAFE.getObject(str, STRING_VALUE_OFF) as CharArray
-                    val len = (STRING_COUNT_F?.getInt(str)) ?: chars.size
-                    val start = (STRING_OFFSET_F?.getInt(str)) ?: 0
-                    UNSAFE.copyMemory(chars, CHAR_ARRAY_BASE_OFFSET + start * 2L, result, po, (len * 2).toLong())
-                } else {
-                    val ca = str.toCharArray()
-                    UNSAFE.copyMemory(ca, CHAR_ARRAY_BASE_OFFSET, result, po, (ca.size * 2).toLong())
-                }
-            }
-            return result
+        val totalBytes = 1 + if (ascii) str.length else str.length * 2
+        val result: CompactString = when {
+            totalBytes <= 4  -> String4()
+            totalBytes <= 12 -> String12()
+            totalBytes <= 20 -> String20()
+            totalBytes <= 28 -> String28()
+            totalBytes <= 36 -> String36()
+            else -> return str // 非 ASCII 超过 17 个字符等情况
         }
 
+        val chars = accessor.getChars(str)
+        result.fromString(ascii, chars)
+        return result
+    }
+}
 
-        // ====== 版式/布局/平台校验 ======
-        private fun isLittleEndian(): Boolean = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN
+// ========================
+//   运行时环境与布局检查
+// ========================
+internal object LayoutChecker {
+    val UNSAFE: Unsafe = run {
+        val f = Unsafe::class.java.getDeclaredField("theUnsafe")
+        f.isAccessible = true
+        f.get(null) as Unsafe
+    }
 
-        /** 校验字段顺序/类型/偏移严格递增，且首字段是最小偏移。*/
-        fun verifyLayout(clazz: Class<*>, vararg expected: Pair<String, Class<*>>): Boolean {
-            return try {
-                if (expected.isEmpty()) return false
-                val inst = clazz.getDeclaredConstructor().newInstance()
-                val nonStatic = clazz.declaredFields.filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) }
-                val min = nonStatic.minOf { UNSAFE.objectFieldOffset(it) }
-                var last = Long.MIN_VALUE
-                for ((idx, e) in expected.withIndex()) {
-                    val (name, type) = e
-                    val f = clazz.getDeclaredField(name)
-                    if (f.type != type) return false
-                    val off = UNSAFE.objectFieldOffset(f)
-                    if (idx == 0 && off != min) return false
-                    if (idx > 0 && off <= last) return false
-                    last = off
-                }
-                // 额外：探针整体拷贝一遍，确保窗口可读
-                val size = (inst as CompactString).maxByteLength().toLong()
-                val probe = ByteArray(size.toInt())
-                UNSAFE.copyMemory(inst, headerOff(clazz), probe, BYTE_ARRAY_BASE_OFFSET, size)
-                true
-            } catch (_: Throwable) {
-                false
+    fun isLittleEndian(): Boolean = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN
+
+    /** 校验字段名与类型（严格相等；多一个字段也视为不兼容） */
+    fun verifyLayout(clazz: Class<*>, vararg expected: Pair<String, Class<*>>): Boolean {
+        return try {
+            val nonStatic = clazz.declaredFields.filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) }
+            if (nonStatic.size != expected.size) return false
+            for ((name, type) in expected) {
+                val ok = nonStatic.any { it.name == name && it.type == type }
+                if (!ok) return false
             }
-        }
-
-        init {
-            // 1) 解析 String 内部字段（JDK8 兼容 offset/count；JDK9+ 可能无）
-            try {
-                val vf = String::class.java.getDeclaredField("value").apply { isAccessible = true }
-                STRING_VALUE_F = vf
-                STRING_VALUE_OFF = UNSAFE.objectFieldOffset(vf)
-            } catch (_: Throwable) {
-                STRING_VALUE_F = null
-                STRING_VALUE_OFF = -1
-            }
-            try {
-                STRING_OFFSET_F = String::class.java.getDeclaredField("offset").apply { isAccessible = true }
-            } catch (_: Throwable) {
-                STRING_OFFSET_F = null
-            }
-            try {
-                STRING_COUNT_F = String::class.java.getDeclaredField("count").apply { isAccessible = true }
-            } catch (_: Throwable) {
-                STRING_COUNT_F = null
-            }
-
-            // 2) 平台与布局校验（包含大小端检查）
-            val platformOk = isLittleEndian()
-            val layoutOk = try {
-                verifyLayout(String4::class.java, HEADER_NAME to Int::class.java) &&
-                        verifyLayout(
-                            String12::class.java,
-                            HEADER_NAME to Int::class.java,
-                            "l0" to Long::class.java
-                        ) &&
-                        verifyLayout(
-                            String20::class.java,
-                            HEADER_NAME to Int::class.java,
-                            "l0" to Long::class.java,
-                            "l1" to Long::class.java
-                        )
-            } catch (_: Throwable) {
-                false
-            }
-
-            ACCESSOR = if (platformOk && layoutOk) CompactStringAccessor() else null
-        }
-
-        // ===== 编码主入口：外部只依赖 ACCESSOR 是否可用 =====
-        fun encode(str: String): Any = (ACCESSOR?.encode(str)) ?: str
-
+            true
+        } catch (_: Throwable) { false }
+    }
 }
