@@ -5,6 +5,8 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class CompactStringUtilsTest {
+    private val testAsciiString = "abcdefghijklmnopqrstuvwxyz0123456789~!@#$%^"
+    private val testUtf16String = "你要插内存栅栏防止发布前被读到更要保证数组不会再被修改"
     private fun enabled(): Boolean = CompactStringUtils.encode("x") !is String
 
     @Test
@@ -19,7 +21,7 @@ class CompactStringUtilsTest {
     @Test
     fun ascii_30_chars_into_String36() {
         assumeTrue(enabled())
-        val s = "x".repeat(30)
+        val s = testAsciiString.substring(0, 30)
         val r = CompactStringUtils.encode(s)
         assertTrue(r is Any && r !is String)
         assertTrue(r!!::class.java.name.contains("String36"))
@@ -39,13 +41,13 @@ class CompactStringUtilsTest {
     @Test
     fun non_ascii_boundary_17_ok_18_fallback() {
         assumeTrue(enabled())
-        val s17 = "汉".repeat(17) // 1+34=35 → String36
+        val s17 = testUtf16String.substring(0, 17) // 1+34=35 → String36
         val r17 = CompactStringUtils.encode(s17)
         assertTrue(r17 is Any && r17 !is String)
         assertTrue(r17!!::class.java.name.contains("String36"))
         assertEquals(s17, r17.toString())
 
-        val s18 = "汉".repeat(18) // 1+36=37 → fallback
+        val s18 = testUtf16String.substring(0, 18) // 1+36=37 → fallback
         val r18 = CompactStringUtils.encode(s18)
         assertTrue(r18 is String)
         assertEquals(s18, r18)
@@ -73,7 +75,7 @@ class CompactStringUtilsTest {
     fun ascii_length_sweep_0_to_37_with_expected_class_and_roundtrip() {
         assumeTrue(enabled())
         for (len in 0..37) {
-            val s = "a".repeat(len)
+            val s = testAsciiString.substring(0, len)
             val o = CompactStringUtils.encode(s)
 
             if (len == 0) {
@@ -109,7 +111,7 @@ class CompactStringUtilsTest {
     fun utf16_length_sweep_0_to_19_chinese() {
         assumeTrue(enabled())
         for (len in 0..19) {
-            val s = "汉".repeat(len)
+            val s = testUtf16String.substring(0, len)
             val o = CompactStringUtils.encode(s)
 
             if (len == 0) {
@@ -146,7 +148,7 @@ class CompactStringUtilsTest {
         // 构造若干组合：前缀 ASCII，后缀 1..5 个中文
         for (asciiLen in 0..30 step 3) {
             for (cnLen in 1..5) {
-                val s = "a".repeat(asciiLen) + "汉".repeat(cnLen)
+                val s = testAsciiString.substring(0, asciiLen) + testUtf16String.substring(0, cnLen)
                 val o = CompactStringUtils.encode(s)
                 val total = 1 + 2* (asciiLen + cnLen)
                 val shouldCompress = total <= 36
@@ -172,16 +174,40 @@ class CompactStringUtilsTest {
             35 to "String36"  // 1+35=36
         )
         for ((len, expect) in cases) {
-            val s = "a".repeat(len)
+            val s = testAsciiString.substring(0, len)
             val o = CompactStringUtils.encode(s)
             assertTrue(o is Any && o !is String)
             assertTrue(o!!::class.java.name.contains(expect))
             assertEquals(s, o.toString())
         }
         // 36 → fallback
-        val s36 = "a".repeat(36)
+        val s36 = testAsciiString.substring(0, 36)
         val o36 = CompactStringUtils.encode(s36)
         assertTrue(o36 is String)
         assertEquals(s36, o36)
+    }
+
+    // 这些字符不能使用一个 char 描述
+    @Test
+    fun more_char(){
+        assumeTrue(enabled())
+        // 四个龍
+        val str1 = "\uD869\uDEA5"
+        val str2 = "\uD840\uDC00\uD869\uDEA5"
+        assertEquals(str1, CompactStringUtils.encode(str1).toString())
+        assertEquals(str2, CompactStringUtils.encode(str2).toString())
+
+        val str3 = "$str1.$str2"
+        val p = str3.indexOf(".")
+        val str4 = str3.substring(p + 1)
+        assertEquals(str2, str4)
+
+        // 一家人
+        val str5 = "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66"
+        assertEquals(str5, CompactStringUtils.encode(str5).toString())
+
+        // 黑色的点赞
+        val str6 = "\uD83D\uDC4D\uD83C\uDFFD"
+        assertEquals(str6, CompactStringUtils.encode(str6).toString())
     }
 }
