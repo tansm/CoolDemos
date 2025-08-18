@@ -1,0 +1,811 @@
+Benchmark                                                   (kind)  (len)   Mode  Cnt          Score         Error   Units
+CompactStringBench.baseline_string_new                       ASCII      1  thrpt   10   15761735.892 ±  213741.018   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII      1  thrpt   10       1012.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII      1  thrpt   10        861.000                    ms
+CompactStringBench.baseline_string_new                       ASCII      3  thrpt   10   14696742.577 ±  111546.354   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII      3  thrpt   10       1027.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII      3  thrpt   10        868.000                    ms
+CompactStringBench.baseline_string_new                       ASCII      4  thrpt   10   14932771.771 ±  198614.245   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII      4  thrpt   10       1010.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII      4  thrpt   10        862.000                    ms
+CompactStringBench.baseline_string_new                       ASCII      7  thrpt   10   12625010.055 ±  241190.255   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII      7  thrpt   10       1043.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII      7  thrpt   10        880.000                    ms
+CompactStringBench.baseline_string_new                       ASCII      8  thrpt   10   14225615.658 ±  208788.557   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII      8  thrpt   10       1047.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII      8  thrpt   10        877.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     11  thrpt   10   13086391.296 ±  215281.620   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     11  thrpt   10       1009.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     11  thrpt   10        859.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     12  thrpt   10   11507702.871 ±  565554.038   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     12  thrpt   10        966.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     12  thrpt   10        845.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     15  thrpt   10   11026308.642 ±  366719.031   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     15  thrpt   10       1071.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     15  thrpt   10        867.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     16  thrpt   10   11100972.142 ±  295151.548   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     16  thrpt   10       1003.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     16  thrpt   10        851.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     19  thrpt   10   11157448.515 ±  110623.128   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     19  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     19  thrpt   10       1054.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     19  thrpt   10        881.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     20  thrpt   10   10796819.093 ±  401835.664   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     20  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     20  thrpt   10       1028.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     20  thrpt   10        876.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     27  thrpt   10   10338839.713 ±  158562.725   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     27  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     27  thrpt   10       1065.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     27  thrpt   10        886.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     28  thrpt   10   11542230.969 ±  164738.343   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     28  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     28  thrpt   10       1051.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     28  thrpt   10        883.000                    ms
+CompactStringBench.baseline_string_new                       ASCII     35  thrpt   10    9668821.318 ±  193899.284   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         ASCII     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    ASCII     35  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              ASCII     35  thrpt   10       1054.000                counts
+CompactStringBench.baseline_string_new:gc.time               ASCII     35  thrpt   10        858.000                    ms
+CompactStringBench.baseline_string_new                       UTF16      1  thrpt   10   14723827.021 ±  162508.075   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16      1  thrpt   10       1051.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16      1  thrpt   10        875.000                    ms
+CompactStringBench.baseline_string_new                       UTF16      3  thrpt   10   10552863.484 ±   80923.721   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16      3  thrpt   10       1044.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16      3  thrpt   10        866.000                    ms
+CompactStringBench.baseline_string_new                       UTF16      4  thrpt   10   11182618.362 ±  138629.820   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16      4  thrpt   10       1019.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16      4  thrpt   10        876.000                    ms
+CompactStringBench.baseline_string_new                       UTF16      7  thrpt   10    9043190.925 ±  161663.308   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16      7  thrpt   10       1027.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16      7  thrpt   10        876.000                    ms
+CompactStringBench.baseline_string_new                       UTF16      8  thrpt   10    8097479.385 ±   83929.231   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16      8  thrpt   10       1065.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16      8  thrpt   10        881.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     11  thrpt   10    6884866.223 ±   64279.814   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     11  thrpt   10       1031.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     11  thrpt   10        869.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     12  thrpt   10    6580830.454 ±   90886.615   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     12  thrpt   10        989.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     12  thrpt   10        860.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     15  thrpt   10    5837601.200 ±   75062.288   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     15  thrpt   10        999.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     15  thrpt   10        871.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     16  thrpt   10    5571282.885 ±   51801.643   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     16  thrpt   10       1008.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     16  thrpt   10        883.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     19  thrpt   10    4932866.464 ±   80344.384   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     19  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     19  thrpt   10       1059.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     19  thrpt   10        880.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     20  thrpt   10    4824638.579 ±   54044.481   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     20  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     20  thrpt   10       1048.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     20  thrpt   10        868.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     27  thrpt   10    3577640.610 ±   28157.873   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     27  thrpt   10         ≈ 10⁻³                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     27  thrpt   10       1022.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     27  thrpt   10        863.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     28  thrpt   10    3582973.682 ±   45998.211   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     28  thrpt   10         ≈ 10⁻³                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     28  thrpt   10       1046.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     28  thrpt   10        877.000                    ms
+CompactStringBench.baseline_string_new                       UTF16     35  thrpt   10    2935858.360 ±   42153.900   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate         UTF16     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm    UTF16     35  thrpt   10         ≈ 10⁻³                  B/op
+CompactStringBench.baseline_string_new:gc.count              UTF16     35  thrpt   10       1012.000                counts
+CompactStringBench.baseline_string_new:gc.time               UTF16     35  thrpt   10        883.000                    ms
+CompactStringBench.baseline_string_new                         MIX      1  thrpt   10   12060712.584 ±  146989.707   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX      1  thrpt   10       1007.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX      1  thrpt   10        874.000                    ms
+CompactStringBench.baseline_string_new                         MIX      3  thrpt   10   11010546.785 ±  125457.906   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX      3  thrpt   10       1021.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX      3  thrpt   10        873.000                    ms
+CompactStringBench.baseline_string_new                         MIX      4  thrpt   10   10889559.501 ±   91037.356   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX      4  thrpt   10       1014.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX      4  thrpt   10        865.000                    ms
+CompactStringBench.baseline_string_new                         MIX      7  thrpt   10    9190861.363 ±  117604.748   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX      7  thrpt   10       1014.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX      7  thrpt   10        849.000                    ms
+CompactStringBench.baseline_string_new                         MIX      8  thrpt   10    9196692.210 ±  111049.785   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX      8  thrpt   10       1016.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX      8  thrpt   10        879.000                    ms
+CompactStringBench.baseline_string_new                         MIX     11  thrpt   10    7987731.208 ±   77908.101   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     11  thrpt   10       1080.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     11  thrpt   10        888.000                    ms
+CompactStringBench.baseline_string_new                         MIX     12  thrpt   10    7990790.027 ±  125798.198   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     12  thrpt   10        981.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     12  thrpt   10        855.000                    ms
+CompactStringBench.baseline_string_new                         MIX     15  thrpt   10    6647898.813 ±  115927.961   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     15  thrpt   10       1056.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     15  thrpt   10        888.000                    ms
+CompactStringBench.baseline_string_new                         MIX     16  thrpt   10    6777223.752 ±   75662.895   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     16  thrpt   10       1016.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     16  thrpt   10        872.000                    ms
+CompactStringBench.baseline_string_new                         MIX     19  thrpt   10    6315847.697 ±   57693.759   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     19  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     19  thrpt   10       1010.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     19  thrpt   10        879.000                    ms
+CompactStringBench.baseline_string_new                         MIX     20  thrpt   10    6449344.417 ±   49101.816   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     20  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     20  thrpt   10       1023.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     20  thrpt   10        880.000                    ms
+CompactStringBench.baseline_string_new                         MIX     27  thrpt   10    5256858.962 ±   32446.051   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     27  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     27  thrpt   10       1017.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     27  thrpt   10        874.000                    ms
+CompactStringBench.baseline_string_new                         MIX     28  thrpt   10    5208625.566 ±   87463.480   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     28  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     28  thrpt   10       1035.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     28  thrpt   10        879.000                    ms
+CompactStringBench.baseline_string_new                         MIX     35  thrpt   10    4296236.113 ±   43149.273   ops/s
+CompactStringBench.baseline_string_new:gc.alloc.rate           MIX     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.baseline_string_new:gc.alloc.rate.norm      MIX     35  thrpt   10         ≈ 10⁻³                  B/op
+CompactStringBench.baseline_string_new:gc.count                MIX     35  thrpt   10       1044.000                counts
+CompactStringBench.baseline_string_new:gc.time                 MIX     35  thrpt   10        874.000                    ms
+CompactStringBench.encode_only                               ASCII      1  thrpt   10   41510329.741 ±  588272.087   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII      1  thrpt   10       1042.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII      1  thrpt   10        863.000                    ms
+CompactStringBench.encode_only                               ASCII      3  thrpt   10   38453742.176 ±  824781.638   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII      3  thrpt   10       1008.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII      3  thrpt   10        860.000                    ms
+CompactStringBench.encode_only                               ASCII      4  thrpt   10   36535987.300 ±  362353.428   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII      4  thrpt   10       1033.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII      4  thrpt   10        864.000                    ms
+CompactStringBench.encode_only                               ASCII      7  thrpt   10   35356369.862 ±  382762.628   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII      7  thrpt   10       1007.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII      7  thrpt   10        857.000                    ms
+CompactStringBench.encode_only                               ASCII      8  thrpt   10   34148043.736 ±  470976.697   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII      8  thrpt   10       1069.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII      8  thrpt   10        867.000                    ms
+CompactStringBench.encode_only                               ASCII     11  thrpt   10   30751372.960 ±  284725.902   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     11  thrpt   10       1065.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     11  thrpt   10        875.000                    ms
+CompactStringBench.encode_only                               ASCII     12  thrpt   10   29123969.230 ±  179218.012   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     12  thrpt   10       1030.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     12  thrpt   10        857.000                    ms
+CompactStringBench.encode_only                               ASCII     15  thrpt   10   28526803.257 ±  475255.307   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     15  thrpt   10       1063.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     15  thrpt   10        874.000                    ms
+CompactStringBench.encode_only                               ASCII     16  thrpt   10   27615781.010 ±  394653.555   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     16  thrpt   10       1019.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     16  thrpt   10        863.000                    ms
+CompactStringBench.encode_only                               ASCII     19  thrpt   10   25753628.999 ±  771175.217   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     19  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     19  thrpt   10       1000.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     19  thrpt   10        839.000                    ms
+CompactStringBench.encode_only                               ASCII     20  thrpt   10   24408909.882 ±  320227.028   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     20  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     20  thrpt   10       1015.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     20  thrpt   10        856.000                    ms
+CompactStringBench.encode_only                               ASCII     27  thrpt   10   22451987.983 ±  398136.875   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     27  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     27  thrpt   10       1029.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     27  thrpt   10        887.000                    ms
+CompactStringBench.encode_only                               ASCII     28  thrpt   10   20828273.718 ±  505951.028   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     28  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     28  thrpt   10       1026.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     28  thrpt   10        851.000                    ms
+CompactStringBench.encode_only                               ASCII     35  thrpt   10   19084937.875 ±  327974.488   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 ASCII     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            ASCII     35  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_only:gc.count                      ASCII     35  thrpt   10       1027.000                counts
+CompactStringBench.encode_only:gc.time                       ASCII     35  thrpt   10        860.000                    ms
+CompactStringBench.encode_only                               UTF16      1  thrpt   10  107335764.663 ± 1907667.864   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16      1  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16      1  thrpt   10       1042.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16      1  thrpt   10        854.000                    ms
+CompactStringBench.encode_only                               UTF16      3  thrpt   10   98534638.559 ± 2550661.585   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16      3  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16      3  thrpt   10       1076.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16      3  thrpt   10        852.000                    ms
+CompactStringBench.encode_only                               UTF16      4  thrpt   10   94626695.626 ± 2019368.526   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16      4  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16      4  thrpt   10       1074.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16      4  thrpt   10        863.000                    ms
+CompactStringBench.encode_only                               UTF16      7  thrpt   10   81954303.323 ± 4417559.447   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16      7  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16      7  thrpt   10       1066.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16      7  thrpt   10        867.000                    ms
+CompactStringBench.encode_only                               UTF16      8  thrpt   10   81681836.718 ± 1137465.321   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16      8  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16      8  thrpt   10       1020.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16      8  thrpt   10        872.000                    ms
+CompactStringBench.encode_only                               UTF16     11  thrpt   10   75132060.887 ± 1750895.691   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     11  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     11  thrpt   10       1021.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16     11  thrpt   10        847.000                    ms
+CompactStringBench.encode_only                               UTF16     12  thrpt   10   73308429.749 ± 1764076.434   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     12  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     12  thrpt   10       1078.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16     12  thrpt   10        881.000                    ms
+CompactStringBench.encode_only                               UTF16     15  thrpt   10   67562560.929 ± 1479847.840   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     15  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     15  thrpt   10       1040.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16     15  thrpt   10        873.000                    ms
+CompactStringBench.encode_only                               UTF16     16  thrpt   10   65741603.696 ± 2084860.253   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     16  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     16  thrpt   10       1055.000                counts
+CompactStringBench.encode_only:gc.time                       UTF16     16  thrpt   10        859.000                    ms
+CompactStringBench.encode_only                               UTF16     19  thrpt   10  144857935.864 ± 2494102.822   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     19  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     19  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                               UTF16     20  thrpt   10  144707448.290 ± 2527583.836   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     20  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     20  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                               UTF16     27  thrpt   10  141545945.465 ± 3167883.921   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     27  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     27  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                               UTF16     28  thrpt   10  137551938.250 ± 2070721.581   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     28  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     28  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                               UTF16     35  thrpt   10  132035131.364 ± 1397592.206   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                 UTF16     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm            UTF16     35  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                      UTF16     35  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                                 MIX      1  thrpt   10  108545207.365 ± 2259859.280   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX      1  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX      1  thrpt   10       1020.000                counts
+CompactStringBench.encode_only:gc.time                         MIX      1  thrpt   10        852.000                    ms
+CompactStringBench.encode_only                                 MIX      3  thrpt   10   89069218.596 ± 2224023.700   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX      3  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX      3  thrpt   10       1013.000                counts
+CompactStringBench.encode_only:gc.time                         MIX      3  thrpt   10        865.000                    ms
+CompactStringBench.encode_only                                 MIX      4  thrpt   10   82867459.047 ± 1727345.294   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX      4  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX      4  thrpt   10       1006.000                counts
+CompactStringBench.encode_only:gc.time                         MIX      4  thrpt   10        850.000                    ms
+CompactStringBench.encode_only                                 MIX      7  thrpt   10   75590191.179 ± 1961509.659   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX      7  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX      7  thrpt   10       1037.000                counts
+CompactStringBench.encode_only:gc.time                         MIX      7  thrpt   10        875.000                    ms
+CompactStringBench.encode_only                                 MIX      8  thrpt   10   71878927.512 ± 2648800.721   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX      8  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX      8  thrpt   10       1059.000                counts
+CompactStringBench.encode_only:gc.time                         MIX      8  thrpt   10        870.000                    ms
+CompactStringBench.encode_only                                 MIX     11  thrpt   10   64510761.952 ± 3094007.587   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     11  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     11  thrpt   10        957.000                counts
+CompactStringBench.encode_only:gc.time                         MIX     11  thrpt   10        844.000                    ms
+CompactStringBench.encode_only                                 MIX     12  thrpt   10   64206612.371 ± 2003412.316   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     12  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     12  thrpt   10       1007.000                counts
+CompactStringBench.encode_only:gc.time                         MIX     12  thrpt   10        872.000                    ms
+CompactStringBench.encode_only                                 MIX     15  thrpt   10   57025778.961 ± 2482262.173   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     15  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     15  thrpt   10        973.000                counts
+CompactStringBench.encode_only:gc.time                         MIX     15  thrpt   10        865.000                    ms
+CompactStringBench.encode_only                                 MIX     16  thrpt   10   56607992.755 ±  501424.441   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     16  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     16  thrpt   10       1066.000                counts
+CompactStringBench.encode_only:gc.time                         MIX     16  thrpt   10        866.000                    ms
+CompactStringBench.encode_only                                 MIX     19  thrpt   10  109849504.540 ± 1170281.002   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     19  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     19  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                                 MIX     20  thrpt   10  103700698.520 ± 1263424.177   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     20  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     20  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                                 MIX     27  thrpt   10   96838075.648 ±  882582.306   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     27  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     27  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                                 MIX     28  thrpt   10   89494361.211 ±  754890.646   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     28  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     28  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_only                                 MIX     35  thrpt   10   86557999.999 ±  855775.162   ops/s
+CompactStringBench.encode_only:gc.alloc.rate                   MIX     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_only:gc.alloc.rate.norm              MIX     35  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_only:gc.count                        MIX     35  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                      ASCII      1  thrpt   10   16259564.774 ±  140513.096   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII      1  thrpt   10       1023.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII      1  thrpt   10        875.000                    ms
+CompactStringBench.encode_then_toString                      ASCII      3  thrpt   10   15404400.418 ±  290521.633   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII      3  thrpt   10       1056.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII      3  thrpt   10        875.000                    ms
+CompactStringBench.encode_then_toString                      ASCII      4  thrpt   10   16753886.114 ±  140483.621   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII      4  thrpt   10       1021.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII      4  thrpt   10        848.000                    ms
+CompactStringBench.encode_then_toString                      ASCII      7  thrpt   10   13476871.962 ±  139462.145   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII      7  thrpt   10       1065.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII      7  thrpt   10        874.000                    ms
+CompactStringBench.encode_then_toString                      ASCII      8  thrpt   10   15249341.613 ±  213609.047   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII      8  thrpt   10       1010.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII      8  thrpt   10        866.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     11  thrpt   10   12639067.166 ±  162188.392   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     11  thrpt   10       1047.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     11  thrpt   10        866.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     12  thrpt   10   12269993.146 ±  164180.341   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     12  thrpt   10       1045.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     12  thrpt   10        878.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     15  thrpt   10   11729644.767 ±  150577.440   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     15  thrpt   10       1050.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     15  thrpt   10        885.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     16  thrpt   10   11827836.219 ±   85344.962   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     16  thrpt   10       1058.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     16  thrpt   10        869.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     19  thrpt   10   12932014.272 ±  160960.776   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     19  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     19  thrpt   10       1058.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     19  thrpt   10        879.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     20  thrpt   10   11037898.241 ±   77139.750   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     20  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     20  thrpt   10       1054.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     20  thrpt   10        865.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     27  thrpt   10    9984204.834 ±   79664.032   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     27  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     27  thrpt   10       1075.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     27  thrpt   10        877.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     28  thrpt   10   10807102.515 ±  238901.736   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     28  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     28  thrpt   10       1015.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     28  thrpt   10        864.000                    ms
+CompactStringBench.encode_then_toString                      ASCII     35  thrpt   10    8792923.593 ±   84258.994   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        ASCII     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   ASCII     35  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             ASCII     35  thrpt   10       1032.000                counts
+CompactStringBench.encode_then_toString:gc.time              ASCII     35  thrpt   10        863.000                    ms
+CompactStringBench.encode_then_toString                      UTF16      1  thrpt   10   33709575.325 ±  509069.264   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16      1  thrpt   10       1111.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16      1  thrpt   10        879.000                    ms
+CompactStringBench.encode_then_toString                      UTF16      3  thrpt   10   29142290.453 ±  288631.738   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16      3  thrpt   10       1053.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16      3  thrpt   10        878.000                    ms
+CompactStringBench.encode_then_toString                      UTF16      4  thrpt   10   28709532.278 ±  263363.515   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16      4  thrpt   10       1025.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16      4  thrpt   10        874.000                    ms
+CompactStringBench.encode_then_toString                      UTF16      7  thrpt   10   28064467.273 ±  599162.982   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16      7  thrpt   10       1030.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16      7  thrpt   10        861.000                    ms
+CompactStringBench.encode_then_toString                      UTF16      8  thrpt   10   27133141.028 ±  610596.030   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16      8  thrpt   10       1053.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16      8  thrpt   10        879.000                    ms
+CompactStringBench.encode_then_toString                      UTF16     11  thrpt   10   25079676.819 ±  325838.293   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     11  thrpt   10       1038.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16     11  thrpt   10        877.000                    ms
+CompactStringBench.encode_then_toString                      UTF16     12  thrpt   10   24989122.732 ±  230860.205   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     12  thrpt   10       1061.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16     12  thrpt   10        891.000                    ms
+CompactStringBench.encode_then_toString                      UTF16     15  thrpt   10   23967402.186 ±  294256.578   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     15  thrpt   10       1072.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16     15  thrpt   10        881.000                    ms
+CompactStringBench.encode_then_toString                      UTF16     16  thrpt   10   23135116.994 ±  283152.025   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     16  thrpt   10       1065.000                counts
+CompactStringBench.encode_then_toString:gc.time              UTF16     16  thrpt   10        884.000                    ms
+CompactStringBench.encode_then_toString                      UTF16     19  thrpt   10  149316728.465 ± 2403482.239   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     19  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     19  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                      UTF16     20  thrpt   10  148033821.733 ± 1370248.597   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     20  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     20  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                      UTF16     27  thrpt   10  147154138.884 ± 1443733.885   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     27  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     27  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                      UTF16     28  thrpt   10  141817245.944 ± 1285383.297   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     28  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     28  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                      UTF16     35  thrpt   10  133340092.953 ± 1733159.874   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate        UTF16     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm   UTF16     35  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count             UTF16     35  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                        MIX      1  thrpt   10   33619153.646 ±  416708.262   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX      1  thrpt   10       1018.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX      1  thrpt   10        855.000                    ms
+CompactStringBench.encode_then_toString                        MIX      3  thrpt   10   28884208.933 ±  450000.583   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX      3  thrpt   10       1055.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX      3  thrpt   10        885.000                    ms
+CompactStringBench.encode_then_toString                        MIX      4  thrpt   10   28202191.322 ±  393712.000   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX      4  thrpt   10       1087.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX      4  thrpt   10        876.000                    ms
+CompactStringBench.encode_then_toString                        MIX      7  thrpt   10   26522074.674 ±  254308.031   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX      7  thrpt   10       1035.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX      7  thrpt   10        870.000                    ms
+CompactStringBench.encode_then_toString                        MIX      8  thrpt   10   26438524.052 ±  464224.805   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX      8  thrpt   10       1054.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX      8  thrpt   10        886.000                    ms
+CompactStringBench.encode_then_toString                        MIX     11  thrpt   10   24683652.988 ±  212638.975   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     11  thrpt   10       1067.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX     11  thrpt   10        880.000                    ms
+CompactStringBench.encode_then_toString                        MIX     12  thrpt   10   23622399.243 ±  340452.032   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     12  thrpt   10       1065.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX     12  thrpt   10        870.000                    ms
+CompactStringBench.encode_then_toString                        MIX     15  thrpt   10   22727836.735 ±  280283.154   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     15  thrpt   10       1094.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX     15  thrpt   10        885.000                    ms
+CompactStringBench.encode_then_toString                        MIX     16  thrpt   10   22230144.464 ±  275544.916   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     16  thrpt   10       1055.000                counts
+CompactStringBench.encode_then_toString:gc.time                MIX     16  thrpt   10        888.000                    ms
+CompactStringBench.encode_then_toString                        MIX     19  thrpt   10  109677440.173 ± 1247963.249   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     19  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     19  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                        MIX     20  thrpt   10  106574329.965 ± 1512214.097   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     20  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     20  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                        MIX     27  thrpt   10   93243932.349 ±  690038.055   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     27  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     27  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                        MIX     28  thrpt   10   89383735.780 ±  614847.857   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     28  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     28  thrpt   10            ≈ 0                counts
+CompactStringBench.encode_then_toString                        MIX     35  thrpt   10   88155275.002 ± 1136157.313   ops/s
+CompactStringBench.encode_then_toString:gc.alloc.rate          MIX     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.encode_then_toString:gc.alloc.rate.norm     MIX     35  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.encode_then_toString:gc.count               MIX     35  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                             ASCII      1  thrpt   10   19684362.010 ±  288704.432   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII      1  thrpt   10       1029.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII      1  thrpt   10        860.000                    ms
+CompactStringBench.toString_only                             ASCII      3  thrpt   10   20681155.604 ±  317814.476   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII      3  thrpt   10       1015.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII      3  thrpt   10        850.000                    ms
+CompactStringBench.toString_only                             ASCII      4  thrpt   10   19720509.370 ±  115593.271   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII      4  thrpt   10       1065.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII      4  thrpt   10        881.000                    ms
+CompactStringBench.toString_only                             ASCII      7  thrpt   10   19003340.358 ±  311750.877   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII      7  thrpt   10       1030.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII      7  thrpt   10        879.000                    ms
+CompactStringBench.toString_only                             ASCII      8  thrpt   10   18746521.094 ±  284448.172   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII      8  thrpt   10       1010.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII      8  thrpt   10        849.000                    ms
+CompactStringBench.toString_only                             ASCII     11  thrpt   10   18328563.362 ±  163655.337   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     11  thrpt   10       1048.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     11  thrpt   10        884.000                    ms
+CompactStringBench.toString_only                             ASCII     12  thrpt   10   23345442.469 ±  308575.875   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     12  thrpt   10       1094.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     12  thrpt   10        880.000                    ms
+CompactStringBench.toString_only                             ASCII     15  thrpt   10   17822301.764 ±  246252.579   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     15  thrpt   10       1079.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     15  thrpt   10        890.000                    ms
+CompactStringBench.toString_only                             ASCII     16  thrpt   10   17403714.395 ±  259598.866   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     16  thrpt   10       1014.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     16  thrpt   10        874.000                    ms
+CompactStringBench.toString_only                             ASCII     19  thrpt   10   17096522.996 ±  216895.978   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     19  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     19  thrpt   10       1081.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     19  thrpt   10        889.000                    ms
+CompactStringBench.toString_only                             ASCII     20  thrpt   10   16985800.962 ±  197781.852   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     20  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     20  thrpt   10       1074.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     20  thrpt   10        877.000                    ms
+CompactStringBench.toString_only                             ASCII     27  thrpt   10   16097661.088 ±  291399.016   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     27  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     27  thrpt   10       1066.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     27  thrpt   10        887.000                    ms
+CompactStringBench.toString_only                             ASCII     28  thrpt   10   15617410.464 ±  220104.460   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     28  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     28  thrpt   10       1030.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     28  thrpt   10        877.000                    ms
+CompactStringBench.toString_only                             ASCII     35  thrpt   10   14991857.906 ±  142144.066   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               ASCII     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          ASCII     35  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    ASCII     35  thrpt   10       1091.000                counts
+CompactStringBench.toString_only:gc.time                     ASCII     35  thrpt   10        890.000                    ms
+CompactStringBench.toString_only                             UTF16      1  thrpt   10   37722923.292 ±  517788.644   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16      1  thrpt   10       1026.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16      1  thrpt   10        867.000                    ms
+CompactStringBench.toString_only                             UTF16      3  thrpt   10   36065167.935 ±  425634.009   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16      3  thrpt   10       1029.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16      3  thrpt   10        868.000                    ms
+CompactStringBench.toString_only                             UTF16      4  thrpt   10   36209260.385 ±  341273.474   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16      4  thrpt   10       1099.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16      4  thrpt   10        887.000                    ms
+CompactStringBench.toString_only                             UTF16      7  thrpt   10   33754008.423 ±  480670.892   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16      7  thrpt   10       1000.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16      7  thrpt   10        863.000                    ms
+CompactStringBench.toString_only                             UTF16      8  thrpt   10   33670546.418 ±  658445.349   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16      8  thrpt   10       1039.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16      8  thrpt   10        884.000                    ms
+CompactStringBench.toString_only                             UTF16     11  thrpt   10   31506411.613 ±  457942.247   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     11  thrpt   10       1081.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16     11  thrpt   10        881.000                    ms
+CompactStringBench.toString_only                             UTF16     12  thrpt   10   31570374.157 ±  438756.513   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     12  thrpt   10       1095.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16     12  thrpt   10        892.000                    ms
+CompactStringBench.toString_only                             UTF16     15  thrpt   10   30081367.032 ±  162757.264   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     15  thrpt   10       1054.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16     15  thrpt   10        886.000                    ms
+CompactStringBench.toString_only                             UTF16     16  thrpt   10   30864490.990 ±  397590.037   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     16  thrpt   10       1091.000                counts
+CompactStringBench.toString_only:gc.time                     UTF16     16  thrpt   10        890.000                    ms
+CompactStringBench.toString_only                             UTF16     19  thrpt   10  209257692.020 ± 2991214.655   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     19  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     19  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                             UTF16     20  thrpt   10  208678402.491 ± 2546180.007   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     20  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     20  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                             UTF16     27  thrpt   10  207639302.827 ± 2489943.775   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     27  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     27  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                             UTF16     28  thrpt   10  208500215.079 ± 1584734.490   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     28  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     28  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                             UTF16     35  thrpt   10  205270973.963 ± 5559993.830   ops/s
+CompactStringBench.toString_only:gc.alloc.rate               UTF16     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm          UTF16     35  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                    UTF16     35  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                               MIX      1  thrpt   10   37652349.700 ±  480184.747   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX      1  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX      1  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX      1  thrpt   10       1052.000                counts
+CompactStringBench.toString_only:gc.time                       MIX      1  thrpt   10        873.000                    ms
+CompactStringBench.toString_only                               MIX      3  thrpt   10   36404669.331 ±  301382.467   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX      3  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX      3  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX      3  thrpt   10       1056.000                counts
+CompactStringBench.toString_only:gc.time                       MIX      3  thrpt   10        865.000                    ms
+CompactStringBench.toString_only                               MIX      4  thrpt   10   37202565.086 ±  511718.035   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX      4  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX      4  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX      4  thrpt   10       1044.000                counts
+CompactStringBench.toString_only:gc.time                       MIX      4  thrpt   10        841.000                    ms
+CompactStringBench.toString_only                               MIX      7  thrpt   10   34682260.823 ±  525046.816   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX      7  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX      7  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX      7  thrpt   10       1059.000                counts
+CompactStringBench.toString_only:gc.time                       MIX      7  thrpt   10        876.000                    ms
+CompactStringBench.toString_only                               MIX      8  thrpt   10   35553703.117 ±  274626.103   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX      8  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX      8  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX      8  thrpt   10       1069.000                counts
+CompactStringBench.toString_only:gc.time                       MIX      8  thrpt   10        864.000                    ms
+CompactStringBench.toString_only                               MIX     11  thrpt   10   32093769.985 ±  390920.650   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     11  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     11  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     11  thrpt   10       1026.000                counts
+CompactStringBench.toString_only:gc.time                       MIX     11  thrpt   10        866.000                    ms
+CompactStringBench.toString_only                               MIX     12  thrpt   10   32637642.281 ±  393866.883   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     12  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     12  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     12  thrpt   10       1043.000                counts
+CompactStringBench.toString_only:gc.time                       MIX     12  thrpt   10        877.000                    ms
+CompactStringBench.toString_only                               MIX     15  thrpt   10   31427055.229 ±  420162.190   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     15  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     15  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     15  thrpt   10       1052.000                counts
+CompactStringBench.toString_only:gc.time                       MIX     15  thrpt   10        863.000                    ms
+CompactStringBench.toString_only                               MIX     16  thrpt   10   31789549.664 ±  351000.888   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     16  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     16  thrpt   10         ≈ 10⁻⁴                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     16  thrpt   10       1067.000                counts
+CompactStringBench.toString_only:gc.time                       MIX     16  thrpt   10        880.000                    ms
+CompactStringBench.toString_only                               MIX     19  thrpt   10  209483361.412 ± 1636613.954   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     19  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     19  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     19  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                               MIX     20  thrpt   10  210985480.039 ± 1128740.221   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     20  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     20  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     20  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                               MIX     27  thrpt   10  208050061.399 ± 2742506.516   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     27  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     27  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     27  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                               MIX     28  thrpt   10  207033364.405 ± 2623506.942   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     28  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     28  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     28  thrpt   10            ≈ 0                counts
+CompactStringBench.toString_only                               MIX     35  thrpt   10  206476739.909 ± 1701784.292   ops/s
+CompactStringBench.toString_only:gc.alloc.rate                 MIX     35  thrpt   10          0.001 ±       0.001  MB/sec
+CompactStringBench.toString_only:gc.alloc.rate.norm            MIX     35  thrpt   10         ≈ 10⁻⁵                  B/op
+CompactStringBench.toString_only:gc.count                      MIX     35  thrpt   10            ≈ 0                counts

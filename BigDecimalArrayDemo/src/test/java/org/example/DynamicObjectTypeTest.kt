@@ -120,4 +120,54 @@ class DynamicObjectTypeTest {
         dt.properties[13].set(target, Date(13))
         assertEquals(Date(13), dt.properties[13].get(target))
     }
+
+    @Test
+    fun booleanLayoutTest(){
+        // boolean 夹杂 Byte，都是对齐一个字节，我们希望 Boolean 可以复用之前的字节。
+        val dt = DynamicObjectType().apply {
+            register(BooleanPropertyAccessor(false, defaultValue = false))   // 0
+            register(BytePropertyAccessor(false, 0))            // 1
+            register(BooleanPropertyAccessor(false, defaultValue = false))   // 2
+        }
+        val target = dt.createInstance()
+        assertEquals(2, target.buffer.size)
+    }
+
+    @Test
+    fun booleanLayout2Test(){
+        // 8 个 Boolean 占满一个 Byte。
+        val dt = DynamicObjectType().apply {
+            register(BooleanPropertyAccessor(false, defaultValue = false))   // 0
+            register(BytePropertyAccessor(false, 0))            // 1
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+            register(BooleanPropertyAccessor(false, defaultValue = false))
+        }
+        val target = dt.createInstance()
+        assertEquals(3, target.buffer.size)
+    }
+
+    @Test
+    fun booleanLayout3Test(){
+        // 没有 boolean 时，不要错误的计算字节数。
+        val dt = DynamicObjectType().apply {
+            register(BytePropertyAccessor(false, 0))
+            register(BytePropertyAccessor(false, 0))
+        }
+        val target = dt.createInstance()
+        assertEquals(2, target.buffer.size)
+    }
 }

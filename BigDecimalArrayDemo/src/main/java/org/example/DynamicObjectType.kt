@@ -53,24 +53,20 @@ internal abstract class Field {
 }
 
 internal class BooleanField : Field() {
-    fun get(buffer: ByteArray): Boolean = ((buffer[byteOffset].toInt() shr bitIndex) and 1) == 1
+    private var bitIndex : Int = 0
+
+    fun get(buffer: ByteArray): Boolean = ((buffer[offset].toInt() shr bitIndex) and 1) == 1
 
     fun set(buffer: ByteArray, value: Boolean) {
-        val original = buffer[byteOffset].toInt()
+        val original = buffer[offset].toInt()
         val updated = if (value) original or (1 shl bitIndex) else original and (1 shl bitIndex).inv()
-        buffer[byteOffset] = updated.toByte()
+        buffer[offset] = updated.toByte()
     }
 
-    // 计算 byteOffset 和 bitIndex 的辅助方法
-    private val byteOffset: Int
-        get() = offset ushr 3  // 使用无符号右移操作代替除法，计算 byteOffset
-
-    private val bitIndex: Int
-        get() = offset and 7  // 使用与操作代替取余，计算 bitIndex
-
     override fun setOffset(byteOffset: Int, bitIndex: Int) {
-        val offset = (byteOffset shl 3) or (bitIndex and 0x7)
-        super.setOffset(offset, 0)
+        require(bitIndex in 0 until 8)
+        this.bitIndex = bitIndex
+        super.setOffset(byteOffset, 0)
     }
 
     override val size get() = 1
@@ -915,27 +911,32 @@ internal class DatePropertyAccessor(override val nullable: Boolean) : PropertyAc
 
 //region =================== LayoutManager ========================
 internal object LayoutManager {
-    fun assignOffsets(fields: List<Field>) {
+    fun assignOffsets(fields: List<Field>) : Int {
+        // 两次循环 —— 先布局非布尔，再把全部布尔集中尾部 bit 打包
         var offsetCounter = 0
-        var bitIndex = 0
 
         for (field in fields.sortedByDescending { it.alignment }) {
-            when (field) {
-                is BooleanField -> {
-                    field.setOffset(offsetCounter, bitIndex++)
-                    if (bitIndex == 7) {
-                        // 如果当前位是最后一个位（即 bitIndex 为 7），则需要跳到下一个字节
-                        offsetCounter++
-                        bitIndex = 0
-                    }
-                }
-                else -> {
-                    val alignedOffset = alignUp(offsetCounter, field.alignment)
-                    field.setOffset(alignedOffset, 0)
-                    offsetCounter = alignedOffset + field.size
-                }
+            if (field !is BooleanField) {
+                val alignedOffset = alignUp(offsetCounter, field.alignment)
+                field.setOffset(alignedOffset, 0)
+                offsetCounter = alignedOffset + field.size
             }
         }
+
+        var bitIndex = 8
+        for (field in fields) {
+            if (field is BooleanField) {
+                if (bitIndex == 8) {
+                    // 如果当前位是最后一个位（即 bitIndex 为 8），则需要跳到下一个字节
+                    offsetCounter++
+                    bitIndex = 0
+                }
+                // 注意实际存放的位置要 -1，
+                field.setOffset(offsetCounter - 1, bitIndex++)
+            }
+        }
+
+        return offsetCounter
     }
 
     private fun alignUp(offset: Int, align: Int): Int = (offset + align - 1) and (-align)
@@ -971,8 +972,8 @@ internal object LayoutManager {
 
     fun calcByteSize(properties: Iterable<PropertyAccessor>): Int {
         val fields = properties.flatMap { it.getFields() }
-        assignOffsets(fields)
-        return fields.sumOf { it.size }
+        // 注意不能使用这样的计算方式： fields.sumOf { it.size }， 因为 boolean 实际占用的是 bit.
+        return assignOffsets(fields)
     }
 }
 //endregion
