@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'me.champeau.jmh' version '0.7.2' // JMH Gradle 插件，用于简化基准测试配置
 }
 
 group = 'org.example'
@@ -11,8 +12,20 @@ repositories {
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
+
+    implementation 'org.openjdk.jmh:jmh-core:1.37' // JMH 核心依赖
+    annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37' // JMH 注解处理器
 }
 
 test {
     useJUnitPlatform()
+}
+
+jmh {
+    // JMH 配置选项
+    iterations = 5 // 迭代次数
+    warmupIterations = 3 // 预热迭代
+    fork = 1 // 每个基准测试 fork 的 JVM 数量
+    threads = 1 // 线程数
+    jvmArgs = ['-Xms1g', '-Xmx1g'] // JVM 参数
 }

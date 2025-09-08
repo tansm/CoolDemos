@@ -3,6 +3,7 @@ package org.example;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 import static org.junit.Assert.*;
@@ -14,15 +15,57 @@ public class CompactBitsHandleTest {
         private long inlineBits;
         private long[] heapArray;
 
-        public static final CompactBitsHandle<TestBean> HANDLE;
-
-        static {
-            try {
-                HANDLE = new CompactBitsHandle<>(TestBean.class, "inlineBits", "heapArray");
-            } catch (Exception e) {
-                throw new ExceptionInInitializerError(e);
+        // 在TestBean中
+        private static final WordAccessor<TestBean> ACCESSOR = new WordAccessor<TestBean>() {
+            @Override
+            public long getWord(TestBean instance, int wordIndex) {
+                if (wordIndex == 0) return instance.inlineBits;
+                long[] heap = instance.heapArray;
+                if (heap == null || wordIndex - 1 >= heap.length) return 0L;
+                return heap[wordIndex - 1];
             }
-        }
+
+            @Override
+            public void setWord(TestBean instance, int wordIndex, long value) {
+                if (wordIndex == 0) {
+                    instance.inlineBits = value;
+                    return;
+                }
+                long[] heap = instance.heapArray;
+                int heapIdx = wordIndex - 1;
+                heap[heapIdx] = value;
+            }
+
+            @Override
+            public void ensureCapacity(TestBean instance, int minWordCount) {
+                if (minWordCount <= 1) return; // inline覆盖word 0
+                int minHeap = minWordCount - 1;
+                long[] heap = instance.heapArray;
+                int currHeap = heap != null ? heap.length : 0;
+                if (currHeap >= minHeap) return;
+                int newCap = Math.max(minHeap, currHeap == 0 ? 1 : currHeap * 2);
+                long[] newHeap = new long[newCap];
+                if (heap != null) System.arraycopy(heap, 0, newHeap, 0, heap.length);
+                instance.heapArray = newHeap;
+            }
+
+            @Override
+            public int getWordCount(TestBean instance) {
+                return 1 + (instance.heapArray != null ? instance.heapArray.length : 0);
+            }
+
+            @Override
+            public void trim(TestBean instance) {
+                long[] heap = instance.heapArray;
+                if (heap == null) return;
+                int n = heap.length;
+                while (n > 0 && heap[n - 1] == 0L) n--;
+                if (n == 0) instance.heapArray = null;
+                else if (n < heap.length) instance.heapArray = Arrays.copyOf(heap, n);
+            }
+        };
+
+        public static final CompactBitsHandle<TestBean> HANDLE = new CompactBitsHandle<>(ACCESSOR);
 
         public TestBean clear() {
             HANDLE.clear(this);
@@ -193,7 +236,7 @@ public class CompactBitsHandleTest {
         bean.set(-1);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void testSetRange_fromGreaterThanTo() {
         bean.set(10, 5);
     }
